@@ -38,33 +38,33 @@ enum SheetRoute: Identifiable {
 }
 
 struct ContentView: View {
-    @Environment(SavingsModel.self) private var model
+    @AppStorage("biriktir.onboarding.completed.v1") private var hasCompletedOnboarding = false
     @State private var selectedTab: AppTab = .home
     @State private var sheetRoute: SheetRoute?
 
     var body: some View {
         ZStack {
             AppBackground()
-            Group {
-                switch selectedTab {
-                case .home:
-                    HomeView(onAddGoal: { sheetRoute = .addGoal }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
-                case .goals:
-                    GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })
-                case .reports:
-                    ReportsView()
-                case .settings:
-                    SettingsView()
+            if hasCompletedOnboarding {
+                selectedScreen
+                    .transition(.opacity)
+            } else {
+                OnboardingView {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        hasCompletedOnboarding = true
+                    }
                 }
+                .transition(.opacity)
             }
-            .id(selectedTab)
-            .transition(.opacity.combined(with: .move(edge: .bottom)))
         }
+        .animation(.easeInOut(duration: 0.35), value: hasCompletedOnboarding)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BottomBar(selection: $selectedTab)
-                .padding(.horizontal, 22)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
+            if hasCompletedOnboarding {
+                BottomBar(selection: $selectedTab)
+                    .padding(.horizontal, 22)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+            }
         }
         .sheet(item: $sheetRoute) { route in
             switch route {
@@ -91,6 +91,24 @@ struct ContentView: View {
 
     private func select(_ tab: AppTab) {
         withAnimation(.spring(response: 0.38, dampingFraction: 0.86)) { selectedTab = tab }
+    }
+
+    @ViewBuilder
+    private var selectedScreen: some View {
+        Group {
+            switch selectedTab {
+            case .home:
+                HomeView(onAddGoal: { sheetRoute = .addGoal }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
+            case .goals:
+                GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })
+            case .reports:
+                ReportsView()
+            case .settings:
+                SettingsView()
+            }
+        }
+        .id(selectedTab)
+        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 }
 
