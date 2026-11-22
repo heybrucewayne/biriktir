@@ -32,7 +32,9 @@ struct GoalsView: View {
                 if model.activeGoals.isEmpty {
                     GlassPanel {
                         VStack(spacing: 12) {
-                            Image(systemName: "scope").font(.system(size: 34, weight: .light)).foregroundStyle(AppColors.lavender)
+                            AnimatedGIFView(resourceName: "BiriktirCatBreathing")
+                                .frame(width: 132, height: 124)
+                                .accessibilityHidden(true)
                             Text("Henüz bir hedefin yok").font(.system(size: 18, weight: .semibold, design: .rounded))
                             Text("Kendin için küçük bir hedef belirleyerek başlayabilirsin.")
                                 .font(.system(size: 13)).foregroundStyle(AppColors.secondary).multilineTextAlignment(.center)

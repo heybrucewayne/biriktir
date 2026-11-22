@@ -112,9 +112,9 @@ struct HomeView: View {
                 }
             } else {
                 HStack(spacing: 12) {
-                    Image(systemName: "sparkle")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppColors.lavender)
+                    AnimatedGIFView(resourceName: "BiriktirCatBreathing")
+                        .frame(width: 42, height: 46)
+                        .accessibilityHidden(true)
                     Text("Bir sonraki hayalin için yeni bir hedef ekle.")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppColors.secondary)
@@ -138,7 +138,9 @@ struct HomeView: View {
     private var emptyState: some View {
         GlassPanel {
             VStack(spacing: 12) {
-                Image(systemName: "scope").font(.system(size: 35, weight: .light)).foregroundStyle(AppColors.lavender)
+                AnimatedGIFView(resourceName: "BiriktirCatBreathing")
+                    .frame(width: 132, height: 124)
+                    .accessibilityHidden(true)
                 Text("İlk hedefini belirle").font(.system(size: 20, weight: .semibold, design: .rounded))
                 Text("Aklındaki hayal için bir hedef oluştur, ilerlemeni burada takip et.")
                     .font(.system(size: 14)).foregroundStyle(AppColors.secondary).multilineTextAlignment(.center)

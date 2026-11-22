@@ -10,6 +10,26 @@ struct SettingsView: View {
                 }
 
                 GlassPanel(radius: 26) {
+                    HStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 9) {
+                            Eyebrow(title: "Kediden küçük bir not")
+                            Text("Ufak adımlar da\nbirikime dönüşür.")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text("Kendi hızında ilerle.")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(AppColors.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        AnimatedGIFView(resourceName: "BiriktirCatBreathing")
+                            .frame(width: 110, height: 126)
+                            .accessibilityHidden(true)
+                    }
+                    .frame(minHeight: 126)
+                }
+
+                GlassPanel(radius: 26) {
                     VStack(alignment: .leading, spacing: 17) {
                         Eyebrow(title: "Tercihler")
                         HStack(spacing: 13) {
