@@ -1,4 +1,49 @@
 import SwiftUI
+import UIKit
+
+struct AddMenuSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    var onAddGoal: () -> Void
+    var onAddCountdown: () -> Void
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+            VStack(spacing: 12) {
+                sheetHeader(title: "Yeni ekle") { dismiss() }
+                menuAction(title: "Hedef oluştur", symbol: "target", action: onAddGoal)
+                menuAction(title: "Geri sayım ekle", symbol: "calendar", action: onAddCountdown)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            .padding(.bottom, 18)
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func menuAction(title: String, symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            GlassPanel(radius: 18) {
+                HStack(spacing: 12) {
+                    Image(systemName: symbol)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(AppColors.lavender)
+                        .frame(width: 36, height: 36)
+                        .background(AppColors.lavender.opacity(0.12), in: Circle())
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppColors.secondary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
 
 struct AddGoalSheet: View {
     @Environment(SavingsModel.self) private var model
@@ -85,6 +130,54 @@ struct AddGoalSheet: View {
     }
 }
 
+struct AddCountdownSheet: View {
+    @Environment(SavingsModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var targetDate = Calendar.current.date(byAdding: .day, value: 30, to: .now) ?? .now
+
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+            VStack(alignment: .leading, spacing: 20) {
+                sheetHeader(title: "Geri sayım ekle") { dismiss() }
+                formSection("Geri sayım adı") {
+                    TextField("Örn. Tatile kalan gün", text: $name)
+                        .textInputAutocapitalization(.sentences)
+                        .autocorrectionDisabled(false)
+                }
+                formSection("Tarih") {
+                    DatePicker("", selection: $targetDate, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .tint(AppColors.lavender)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Spacer(minLength: 0)
+                Button(action: saveCountdown) {
+                    Text("Geri sayım oluştur")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!canSave)
+                .opacity(canSave ? 1 : 0.45)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 14)
+            .padding(.bottom, 23)
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func saveCountdown() {
+        guard canSave else { return }
+        model.addCountdown(name: name.trimmingCharacters(in: .whitespacesAndNewlines), date: targetDate)
+        dismiss()
+    }
+}
+
 struct AdjustmentSheet: View {
     @Environment(SavingsModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -156,7 +249,98 @@ struct AdjustmentSheet: View {
     private func saveAdjustment() {
         guard amount > 0 else { return }
         model.adjust(goalID: goalID, by: isDeposit ? amount : -amount)
+        if isDeposit {
+            let feedback = UIImpactFeedbackGenerator(style: .light)
+            feedback.prepare()
+            feedback.impactOccurred(intensity: 0.75)
+        }
         dismiss()
+    }
+}
+
+struct CountdownDetailSheet: View {
+    @Environment(SavingsModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    let countdownID: UUID
+    @State private var confirmsDelete = false
+
+    private var countdown: CountdownItem? { model.countdown(id: countdownID) }
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+            if let countdown {
+                VStack(spacing: 20) {
+                    sheetHeader(title: "Geri sayım") { dismiss() }
+                    GlassPanel(radius: 26) {
+                        VStack(spacing: 12) {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundStyle(AppColors.lavender)
+                                .frame(width: 48, height: 48)
+                                .background(AppColors.lavender.opacity(0.12), in: Circle())
+                            Text(countdown.name)
+                                .font(.system(size: 24, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .multilineTextAlignment(.center)
+                            if let days = countdown.daysRemaining() {
+                                HStack(alignment: .firstTextBaseline, spacing: 7) {
+                                    Text("\(days)")
+                                        .font(.system(size: 58, weight: .semibold, design: .rounded))
+                                        .tracking(-1.5)
+                                        .foregroundStyle(AppColors.lavender)
+                                    Text(days == 0 ? "BUGÜN" : "GÜN KALDI")
+                                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                        .tracking(0.9)
+                                        .foregroundStyle(AppColors.secondary)
+                                }
+                            } else {
+                                Text("Süre geçti")
+                                    .font(.system(size: 21, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.orange)
+                            }
+                            Text(dateText(countdown.targetDate))
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(AppColors.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                    }
+                    Spacer(minLength: 0)
+                    Button(role: .destructive) {
+                        confirmsDelete = true
+                    } label: {
+                        Text("Geri sayımı sil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.red.opacity(0.9))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(.red.opacity(0.08), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+                .padding(.bottom, 23)
+                .confirmationDialog("Geri sayım silinsin mi?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+                    Button("Geri sayımı sil", role: .destructive) {
+                        model.deleteCountdown(id: countdown.id)
+                        dismiss()
+                    }
+                    Button("Vazgeç", role: .cancel) {}
+                }
+            } else {
+                ProgressView().tint(AppColors.lavender)
+            }
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func dateText(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "d MMMM yyyy"
+        return formatter.string(from: date)
     }
 }
 

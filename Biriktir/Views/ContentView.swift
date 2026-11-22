@@ -14,7 +14,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .home: "house"
-        case .goals: "scope"
+        case .goals: "checklist"
         case .reports: "chart.bar"
         case .settings: "slider.horizontal.3"
         }
@@ -24,20 +24,27 @@ enum AppTab: String, CaseIterable, Identifiable {
 enum AdjustmentDirection { case deposit, withdraw }
 
 enum SheetRoute: Identifiable {
+    case addMenu
     case addGoal
+    case addCountdown
     case adjust(goalID: UUID, direction: AdjustmentDirection)
     case detail(goalID: UUID)
+    case countdownDetail(id: UUID)
 
     var id: String {
         switch self {
+        case .addMenu: "add-menu"
         case .addGoal: "add-goal"
+        case .addCountdown: "add-countdown"
         case .adjust(let id, let direction): "adjust-\(id)-\(direction)"
         case .detail(let id): "detail-\(id)"
+        case .countdownDetail(let id): "countdown-detail-\(id)"
         }
     }
 }
 
 struct ContentView: View {
+    @Environment(SavingsModel.self) private var model
     @AppStorage("biriktir.onboarding.completed.v1") private var hasCompletedOnboarding = false
     @State private var selectedTab: AppTab = .home
     @State private var sheetRoute: SheetRoute?
@@ -58,19 +65,44 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.35), value: hasCompletedOnboarding)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if hasCompletedOnboarding {
-                BottomBar(selection: $selectedTab)
-                    .padding(.horizontal, 22)
+        .overlay(alignment: .top) {
+            if let event = model.completionEvent {
+                GoalCompletionToast(goalName: event.goalName)
+                    .padding(.horizontal, 20)
                     .padding(.top, 8)
-                    .padding(.bottom, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(1)
+                    .task(id: event.id) {
+                        do {
+                            try await Task.sleep(for: .seconds(3))
+                        } catch {
+                            return
+                        }
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            model.dismissCompletionEvent(id: event.id)
+                        }
+                    }
             }
         }
+        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.completionEvent?.id)
         .sheet(item: $sheetRoute) { route in
             switch route {
+            case .addMenu:
+                AddMenuSheet(
+                    onAddGoal: { sheetRoute = .addGoal },
+                    onAddCountdown: { sheetRoute = .addCountdown }
+                )
+                .presentationDetents([.height(245)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(32)
             case .addGoal:
                 AddGoalSheet()
                     .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(32)
+            case .addCountdown:
+                AddCountdownSheet()
+                    .presentationDetents([.height(440)])
                     .presentationDragIndicator(.visible)
                     .presentationCornerRadius(32)
             case .adjust(let id, let direction):
@@ -85,6 +117,11 @@ struct ContentView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(32)
+            case .countdownDetail(let id):
+                CountdownDetailSheet(countdownID: id)
+                    .presentationDetents([.height(460)])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(32)
             }
         }
     }
@@ -95,87 +132,20 @@ struct ContentView: View {
 
     @ViewBuilder
     private var selectedScreen: some View {
-        Group {
-            switch selectedTab {
-            case .home:
-                HomeView(onAddGoal: { sheetRoute = .addGoal }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
-            case .goals:
-                GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })
-            case .reports:
-                ReportsView()
-            case .settings:
-                SettingsView()
-            }
+        TabView(selection: $selectedTab) {
+            HomeView(onAddMenu: { sheetRoute = .addMenu }, onAddGoal: { sheetRoute = .addGoal }, onAddCountdown: { sheetRoute = .addCountdown }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onCountdownDetail: { id in sheetRoute = .countdownDetail(id: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
+                .tabItem { Label(AppTab.home.title, systemImage: AppTab.home.symbol) }
+                .tag(AppTab.home)
+            GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })
+                .tabItem { Label(AppTab.goals.title, systemImage: AppTab.goals.symbol) }
+                .tag(AppTab.goals)
+            ReportsView()
+                .tabItem { Label(AppTab.reports.title, systemImage: AppTab.reports.symbol) }
+                .tag(AppTab.reports)
+            SettingsView()
+                .tabItem { Label(AppTab.settings.title, systemImage: AppTab.settings.symbol) }
+                .tag(AppTab.settings)
         }
-        .id(selectedTab)
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
-    }
-}
-
-struct BottomBar: View {
-    @Binding var selection: AppTab
-
-    @ViewBuilder
-    var body: some View {
-        if #available(iOS 26.0, *) {
-            GlassEffectContainer(spacing: 10) {
-                glassBar
-            }
-        } else {
-            glassBar
-        }
-    }
-
-    private var glassBar: some View {
-        HStack(spacing: 4) {
-            ForEach(AppTab.allCases) { tab in
-                Button {
-                    withAnimation(.spring(response: 0.34, dampingFraction: 0.74)) { selection = tab }
-                } label: {
-                    VStack(spacing: 5) {
-                        Image(systemName: tab.symbol)
-                            .font(.system(size: 17, weight: .regular))
-                            .symbolRenderingMode(.hierarchical)
-                            .frame(height: 21)
-                        Text(tab.title)
-                            .font(.system(size: 9, weight: selection == tab ? .medium : .regular))
-                            .lineLimit(1)
-                    }
-                    .foregroundStyle(selection == tab ? .white : AppColors.secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background {
-                        if selection == tab {
-                            Capsule()
-                                .liquidGlass(in: Capsule(), tint: .white.opacity(0.16), interactive: true)
-                                .overlay(Capsule().strokeBorder(.white.opacity(0.27), lineWidth: 0.8))
-                                .shadow(color: AppColors.lavender.opacity(0.12), radius: 14)
-                        }
-                    }
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(tab.title)
-                .accessibilityAddTraits(selection == tab ? .isSelected : [])
-            }
-        }
-        .padding(7)
-        .clearLiquidGlass(in: Capsule())
-        .overlay {
-            Capsule().strokeBorder(
-                LinearGradient(colors: [.white.opacity(0.48), .white.opacity(0.18), .white.opacity(0.08)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                lineWidth: 1
-            )
-        }
-        .overlay(alignment: .top) {
-            Capsule()
-                .stroke(.white.opacity(0.48), lineWidth: 0.7)
-                .padding(.horizontal, 3)
-                .padding(.top, 1)
-                .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: .bottom))
-                .allowsHitTesting(false)
-        }
-        .shadow(color: .black.opacity(0.4), radius: 24, y: 10)
+        .tint(.white)
     }
 }

@@ -31,19 +31,6 @@ extension View {
             self.background(.ultraThinMaterial, in: shape)
         }
     }
-
-    @ViewBuilder
-    func clearLiquidGlass<S: Shape>(in shape: S, interactive: Bool = false) -> some View {
-        if #available(iOS 26.0, *) {
-            if interactive {
-                self.glassEffect(.regular.interactive(), in: shape)
-            } else {
-                self.glassEffect(.regular, in: shape)
-            }
-        } else {
-            self.background(.ultraThinMaterial, in: shape)
-        }
-    }
 }
 
 struct AppBackground: View {

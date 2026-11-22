@@ -26,6 +26,20 @@ struct SavingsGoal: Codable, Identifiable, Equatable {
     )
 }
 
+struct CountdownItem: Codable, Identifiable, Equatable {
+    var id: UUID
+    var name: String
+    var targetDate: Date
+
+    func daysRemaining(asOf date: Date = .now) -> Int? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: date)
+        let deadline = calendar.startOfDay(for: targetDate)
+        guard deadline >= today else { return nil }
+        return calendar.dateComponents([.day], from: today, to: deadline).day ?? 0
+    }
+}
+
 struct SavingsEntry: Codable, Identifiable {
     var id: UUID
     var goalID: UUID
@@ -35,13 +49,23 @@ struct SavingsEntry: Codable, Identifiable {
     var isDeposit: Bool { amount >= 0 }
 }
 
+struct GoalCompletionEvent: Identifiable, Equatable {
+    let id = UUID()
+    let goalName: String
+}
+
 @Observable
 final class SavingsModel {
     private(set) var goals: [SavingsGoal]
     private(set) var entries: [SavingsEntry]
+    private(set) var countdowns: [CountdownItem]
+    private(set) var selectedPrimaryGoalID: UUID?
+    private(set) var completionEvent: GoalCompletionEvent?
 
     private let goalsKey = "biriktir.goals.v1"
     private let entriesKey = "biriktir.entries.v1"
+    private let countdownsKey = "biriktir.countdowns.v1"
+    private let primaryGoalKey = "biriktir.primaryGoal.v1"
 
     init() {
         let loadedGoals: [SavingsGoal]
@@ -52,6 +76,12 @@ final class SavingsModel {
             loadedGoals = [.starter]
         }
         goals = loadedGoals
+        if let storedID = UserDefaults.standard.string(forKey: primaryGoalKey),
+           let id = UUID(uuidString: storedID), loadedGoals.contains(where: { $0.id == id }) {
+            selectedPrimaryGoalID = id
+        } else {
+            selectedPrimaryGoalID = nil
+        }
 
         let loadedEntries: [SavingsEntry]
         if let data = UserDefaults.standard.data(forKey: entriesKey),
@@ -61,12 +91,25 @@ final class SavingsModel {
             loadedEntries = Self.sampleEntries(for: loadedGoals.first?.id)
         }
         entries = loadedEntries
+
+        if let data = UserDefaults.standard.data(forKey: countdownsKey),
+           let saved = try? JSONDecoder().decode([CountdownItem].self, from: data) {
+            countdowns = saved
+        } else {
+            countdowns = []
+        }
         persist()
     }
 
     var activeGoals: [SavingsGoal] { goals }
 
-    var primaryGoal: SavingsGoal? { goals.first }
+    var primaryGoal: SavingsGoal? {
+        if let selectedPrimaryGoalID,
+           let selected = goals.first(where: { $0.id == selectedPrimaryGoalID }) {
+            return selected
+        }
+        return goals.first
+    }
 
     var totalSaved: Int { goals.reduce(0) { $0 + $1.currentAmount } }
 
@@ -76,6 +119,17 @@ final class SavingsModel {
     }
 
     func goal(id: UUID) -> SavingsGoal? { goals.first { $0.id == id } }
+
+    func setPrimaryGoal(_ id: UUID) {
+        guard goals.contains(where: { $0.id == id }) else { return }
+        selectedPrimaryGoalID = id
+        UserDefaults.standard.set(id.uuidString, forKey: primaryGoalKey)
+    }
+
+    func dismissCompletionEvent(id: UUID) {
+        guard completionEvent?.id == id else { return }
+        completionEvent = nil
+    }
 
     func entries(for goalID: UUID) -> [SavingsEntry] {
         entries.filter { $0.goalID == goalID }.sorted { $0.date > $1.date }
@@ -88,12 +142,40 @@ final class SavingsModel {
         persist()
     }
 
+    func addCountdown(name: String, date: Date) {
+        let countdown = CountdownItem(id: UUID(), name: name, targetDate: date)
+        countdowns.append(countdown)
+        persist()
+    }
+
+    func countdown(id: UUID) -> CountdownItem? { countdowns.first { $0.id == id } }
+
+    func deleteCountdown(id: UUID) {
+        countdowns.removeAll { $0.id == id }
+        persist()
+    }
+
+    var orderedCountdowns: [CountdownItem] {
+        countdowns.sorted { first, second in
+            let firstDays = first.daysRemaining()
+            let secondDays = second.daysRemaining()
+            if firstDays == nil, secondDays != nil { return false }
+            if firstDays != nil, secondDays == nil { return true }
+            if firstDays == nil, secondDays == nil { return first.targetDate > second.targetDate }
+            return first.targetDate < second.targetDate
+        }
+    }
+
     func adjust(goalID: UUID, by amount: Int) {
         guard let index = goals.firstIndex(where: { $0.id == goalID }), amount != 0 else { return }
+        let previousAmount = goals[index].currentAmount
         let nextAmount = max(0, goals[index].currentAmount + amount)
         let actualChange = nextAmount - goals[index].currentAmount
         guard actualChange != 0 else { return }
         goals[index].currentAmount = nextAmount
+        if previousAmount < goals[index].targetAmount, nextAmount >= goals[index].targetAmount {
+            completionEvent = GoalCompletionEvent(goalName: goals[index].name)
+        }
         entries.append(SavingsEntry(id: UUID(), goalID: goalID, amount: actualChange, date: .now))
         persist()
     }
@@ -112,6 +194,7 @@ final class SavingsModel {
     private func persist() {
         if let data = try? JSONEncoder().encode(goals) { UserDefaults.standard.set(data, forKey: goalsKey) }
         if let data = try? JSONEncoder().encode(entries) { UserDefaults.standard.set(data, forKey: entriesKey) }
+        if let data = try? JSONEncoder().encode(countdowns) { UserDefaults.standard.set(data, forKey: countdownsKey) }
     }
 
     private static func sampleEntries(for goalID: UUID?) -> [SavingsEntry] {

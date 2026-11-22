@@ -2,9 +2,12 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(SavingsModel.self) private var model
+    var onAddMenu: () -> Void
     var onAddGoal: () -> Void
+    var onAddCountdown: () -> Void
     var onAdjust: (UUID, AdjustmentDirection) -> Void
     var onDetail: (UUID) -> Void
+    var onCountdownDetail: (UUID) -> Void
     var onGoals: () -> Void
     var onReports: () -> Void
     @State private var appeared = false
@@ -25,7 +28,14 @@ struct HomeView: View {
                 } else {
                     emptyState
                 }
-                goalSection
+                if !model.countdowns.isEmpty {
+                    countdownSection
+                        .offset(y: appeared ? 0 : 18)
+                        .opacity(appeared ? 1 : 0)
+                }
+                if model.activeGoals.count > 1 {
+                    goalSection
+                }
                 Spacer(minLength: 12)
             }
             .padding(.horizontal, 20)
@@ -37,17 +47,12 @@ struct HomeView: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Biriktir")
-                    .font(.system(size: 31, weight: .bold, design: .rounded))
-                    .tracking(-0.8)
-                    .foregroundStyle(.white)
-                Text("Hedefine doğru ilerliyorsun.")
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(AppColors.secondary)
-            }
+            Text("Biriktir")
+                .font(.system(size: 31, weight: .bold, design: .rounded))
+                .tracking(-0.8)
+                .foregroundStyle(.white)
             Spacer()
-            Button(action: onAddGoal) {
+            Button(action: onAddMenu) {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(.white)
@@ -56,36 +61,37 @@ struct HomeView: View {
                     .overlay(Circle().strokeBorder(.white.opacity(0.17), lineWidth: 1))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Yeni hedef ekle")
+            .accessibilityLabel("Yeni ekle")
         }
     }
 
     private var monthlyCard: some View {
         let months = model.monthlyTotals()
-        return GlassPanel(radius: 26) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 7) {
-                    HStack(spacing: 7) {
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(AppColors.mint)
-                        Eyebrow(title: "Bu ay biriktirdin")
-                    }
-                    Text(Money.string(model.currentMonthDeposits))
-                        .font(.system(size: 25, weight: .semibold, design: .rounded))
-                        .tracking(-0.6)
-                        .foregroundStyle(.white)
-                        .contentTransition(.numericText())
-                    Text("Güzel gidiyorsun")
-                        .font(.system(size: 12, weight: .medium))
+        let shape = RoundedRectangle(cornerRadius: 23, style: .continuous)
+        return HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 7) {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(AppColors.mint)
+                    Eyebrow(title: "Bu ay biriktirdin")
                 }
-                Spacer(minLength: 0)
-                MiniSparkline(values: months.map(\.amount), color: AppColors.lavender)
-                    .frame(width: 122, height: 54)
-                    .accessibilityHidden(true)
+                Text(Money.string(model.currentMonthDeposits))
+                    .font(.system(size: 23, weight: .semibold, design: .rounded))
+                    .tracking(-0.6)
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
             }
+            Spacer(minLength: 0)
+            MiniSparkline(values: months.map(\.amount), color: AppColors.lavender)
+                .frame(width: 106, height: 40)
+                .accessibilityHidden(true)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .liquidGlass(in: shape)
+        .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.20), .white.opacity(0.045)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+        .shadow(color: .black.opacity(0.2), radius: 18, y: 9)
     }
 
     private var goalSection: some View {
@@ -105,32 +111,34 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
             }
-            if model.activeGoals.count > 1 {
-                ForEach(model.activeGoals.dropFirst()) { goal in
-                    Button { onDetail(goal.id) } label: { GoalRow(goal: goal) }
-                        .buttonStyle(.plain)
+            ForEach(model.activeGoals.filter { $0.id != model.primaryGoal?.id }) { goal in
+                GoalRow(goal: goal, onOpen: { onDetail(goal.id) })
+            }
+        }
+    }
+
+    private var countdownSection: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Geri sayımlar")
+                    .font(.system(size: 19, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                Spacer()
+                Button(action: onAddCountdown) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 34, height: 34)
+                        .liquidGlass(in: Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.15), lineWidth: 1))
                 }
-            } else {
-                HStack(spacing: 12) {
-                    AnimatedGIFView(resourceName: "BiriktirCatBreathing")
-                        .frame(width: 42, height: 46)
-                        .accessibilityHidden(true)
-                    Text("Bir sonraki hayalin için yeni bir hedef ekle.")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppColors.secondary)
-                    Spacer(minLength: 0)
-                    Button(action: onAddGoal) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(AppColors.lavender)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Yeni hedef ekle")
+                .buttonStyle(.plain)
+                .accessibilityLabel("Geri sayım ekle")
+            }
+            ForEach(model.orderedCountdowns) { countdown in
+                CountdownCard(countdown: countdown) {
+                    onCountdownDetail(countdown.id)
                 }
-                .padding(.horizontal, 15)
-                .padding(.vertical, 14)
-                .liquidGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.09), lineWidth: 1))
             }
         }
     }
@@ -142,8 +150,6 @@ struct HomeView: View {
                     .frame(width: 132, height: 124)
                     .accessibilityHidden(true)
                 Text("İlk hedefini belirle").font(.system(size: 20, weight: .semibold, design: .rounded))
-                Text("Aklındaki hayal için bir hedef oluştur, ilerlemeni burada takip et.")
-                    .font(.system(size: 14)).foregroundStyle(AppColors.secondary).multilineTextAlignment(.center)
                 Button(action: onAddGoal) { Label("Hedef oluştur", systemImage: "plus") }
                     .buttonStyle(PrimaryButtonStyle())
                     .padding(.top, 4)
@@ -163,7 +169,6 @@ struct GoalHero: View {
     var body: some View {
         VStack(spacing: 14) {
             HStack {
-                Eyebrow(title: "Öncelikli hedef")
                 Spacer()
                 Button(action: onDetail) {
                     Image(systemName: "ellipsis")
@@ -180,7 +185,8 @@ struct GoalHero: View {
                     .fill(AppColors.lavender.opacity(0.12))
                     .frame(width: 200, height: 200)
                     .blur(radius: 52)
-                ProgressRing(progress: goal.progress, size: 200, lineWidth: 10)
+                ProgressRing(progress: goal.progress, size: 200, lineWidth: 14)
+                    .id(goal.id)
                 VStack(spacing: 7) {
                     Image(systemName: goal.symbol)
                         .font(.system(size: 23, weight: .regular))
@@ -200,8 +206,9 @@ struct GoalHero: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(AppColors.secondary)
                     Text("%\(Money.percent(goal.progress * 100))")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.92))
+                        .contentTransition(.numericText())
                         .padding(.horizontal, 13)
                         .padding(.vertical, 6)
                         .background(.white.opacity(0.10), in: Capsule())
@@ -229,6 +236,92 @@ struct GoalHero: View {
     }
 }
 
+private struct CountdownCard: View {
+    let countdown: CountdownItem
+    var action: () -> Void
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let days = countdown.daysRemaining(asOf: context.date)
+            let accessibilityDays = days.map { $0 == 0 ? "bugün" : "\($0) gün kaldı" } ?? "süre geçti"
+            Button(action: action) {
+                GlassPanel(radius: 23) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(countdown.name)
+                                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                                .tracking(-0.3)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                            if let days {
+                                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                    Text("\(days)")
+                                        .font(.system(size: 46, weight: .semibold, design: .rounded))
+                                        .tracking(-1.2)
+                                        .foregroundStyle(AppColors.lavender)
+                                        .contentTransition(.numericText())
+                                    Text(days == 0 ? "BUGÜN" : "GÜN KALDI")
+                                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                        .tracking(0.9)
+                                        .foregroundStyle(AppColors.secondary)
+                                }
+                            } else {
+                                Text("SÜRE GEÇTİ")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .tracking(0.6)
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.48))
+                            .frame(width: 34, height: 34)
+                            .background(.white.opacity(0.055), in: Circle())
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(countdown.name), \(accessibilityDays)")
+            .accessibilityHint("Geri sayım ayrıntılarını görüntüle")
+            .animation(.easeInOut(duration: 0.25), value: days)
+        }
+    }
+}
+
+struct GoalCompletionToast: View {
+    let goalName: String
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        HStack(spacing: 10) {
+            AnimatedGIFView(resourceName: "BiriktirCat")
+                .frame(width: 42, height: 42)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Hedef tamamlandı")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(goalName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(AppColors.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "sparkles")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(AppColors.lavender)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .liquidGlass(in: shape)
+        .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.24), .white.opacity(0.07)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+        .shadow(color: AppColors.lavender.opacity(0.24), radius: 18, y: 8)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 private struct ActionTile: View {
     let title: String
     let symbol: String
@@ -252,22 +345,44 @@ private struct ActionTile: View {
 
 struct GoalRow: View {
     let goal: SavingsGoal
+    var isPrimary = false
+    var onOpen: () -> Void
+    var onSetPrimary: (() -> Void)? = nil
+
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle().stroke(.white.opacity(0.10), lineWidth: 3)
-                Circle().trim(from: 0, to: goal.progress).stroke(AppColors.lavender, style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))
-                Image(systemName: goal.symbol).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColors.blue)
+        HStack(spacing: 10) {
+            Button(action: onOpen) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle().stroke(.white.opacity(0.10), lineWidth: 3)
+                        Circle().trim(from: 0, to: goal.progress).stroke(AppColors.lavender, style: StrokeStyle(lineWidth: 3, lineCap: .round)).rotationEffect(.degrees(-90))
+                        Image(systemName: goal.symbol).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColors.blue)
+                    }
+                    .frame(width: 42, height: 42)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(goal.name).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                        Text("\(Money.string(goal.currentAmount)) / \(Money.string(goal.targetAmount))")
+                            .font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
+                    }
+                    Spacer(minLength: 2)
+                    Text("%\(Int(goal.progress * 100))").font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColors.lavender)
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.38))
+                }
             }
-            .frame(width: 42, height: 42)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(goal.name).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
-                Text("\(Money.string(goal.currentAmount)) / \(Money.string(goal.targetAmount))")
-                    .font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
+            .buttonStyle(.plain)
+
+            if let onSetPrimary {
+                Button(action: onSetPrimary) {
+                    Image(systemName: isPrimary ? "star.fill" : "star")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isPrimary ? AppColors.lavender : AppColors.secondary)
+                        .frame(width: 34, height: 34)
+                        .background(isPrimary ? AppColors.lavender.opacity(0.14) : .white.opacity(0.045), in: Circle())
             }
-            Spacer()
-            Text("%\(Int(goal.progress * 100))").font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColors.lavender)
-            Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.38))
+                .buttonStyle(.plain)
+                .accessibilityLabel(isPrimary ? "Ana sayfadaki öncelikli hedef" : "Ana sayfada öncelikli hedef yap")
+                .disabled(isPrimary)
+            }
         }
         .padding(14)
         .liquidGlass(in: RoundedRectangle(cornerRadius: 21, style: .continuous))

@@ -49,10 +49,17 @@ struct GoalsView: View {
                     }
                     VStack(spacing: 12) {
                         ForEach(model.activeGoals) { goal in
-                            Button { onDetail(goal.id) } label: { GoalRow(goal: goal) }
-                                .buttonStyle(.plain)
+                            GoalRow(
+                                goal: goal,
+                                isPrimary: model.primaryGoal?.id == goal.id,
+                                onOpen: { onDetail(goal.id) },
+                                onSetPrimary: { model.setPrimaryGoal(goal.id) }
+                            )
                             .contextMenu {
                                 Button { onDetail(goal.id) } label: { Label("Hedef detayları", systemImage: "info.circle") }
+                                if model.primaryGoal?.id != goal.id {
+                                    Button { model.setPrimaryGoal(goal.id) } label: { Label("Ana sayfada göster", systemImage: "star") }
+                                }
                             }
                         }
                     }
