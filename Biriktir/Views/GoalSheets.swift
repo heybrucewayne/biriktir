@@ -42,7 +42,7 @@ struct AddGoalSheet: View {
                                     .background(selected ? AppColors.lavender.opacity(0.18) : .white.opacity(0.035), in: RoundedRectangle(cornerRadius: 17, style: .continuous))
                                     .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).strokeBorder(selected ? AppColors.lavender.opacity(0.55) : .white.opacity(0.08), lineWidth: 1))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(AppPressButtonStyle())
                             }
                         }
                         HStack(spacing: 10) {
@@ -168,7 +168,7 @@ struct AdjustmentSheet: View {
                                 .background(.white.opacity(0.055), in: Capsule())
                                 .overlay(Capsule().strokeBorder(.white.opacity(0.08), lineWidth: 1))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(AppPressButtonStyle())
                     }
                 }
                 if let goal {
@@ -263,7 +263,7 @@ struct CountdownDetailSheet: View {
                             .padding(.vertical, 13)
                             .background(.red.opacity(0.08), in: Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AppPressButtonStyle())
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 14)
@@ -414,7 +414,7 @@ private func sheetHeader(title: String, close: @escaping () -> Void) -> some Vie
                 .frame(width: 35, height: 35)
                 .background(.white.opacity(0.075), in: Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AppPressButtonStyle())
         .accessibilityLabel("Kapat")
         Spacer()
         Text(LocalizedStringKey(title)).font(.system(size: 16, weight: .semibold, design: .rounded)).foregroundStyle(.white)

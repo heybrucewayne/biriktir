@@ -12,6 +12,7 @@ struct GoalsView: View {
                     Text("Hedeflerin")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .tracking(-0.7)
+                        .appEntrance()
                     Spacer()
                     Button(action: onAdd) {
                         Image(systemName: "plus")
@@ -21,7 +22,7 @@ struct GoalsView: View {
                             .liquidGlass(in: Circle())
                             .overlay(Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(AppPressButtonStyle())
                     .accessibilityLabel("Yeni hedef ekle")
                 }
 
@@ -39,13 +40,14 @@ struct GoalsView: View {
                         SummaryPill(symbol: "banknote", label: "Toplam birikim", value: Money.string(model.totalSaved))
                     }
                     VStack(spacing: 12) {
-                        ForEach(model.activeGoals) { goal in
+                        ForEach(Array(model.activeGoals.enumerated()), id: \.element.id) { index, goal in
                             GoalRow(
                                 goal: goal,
                                 isPrimary: model.primaryGoal?.id == goal.id,
                                 onOpen: { onDetail(goal.id) },
                                 onSetPrimary: { model.setPrimaryGoal(goal.id) }
                             )
+                            .appEntrance(delay: Double(index) * 0.055)
                             .contextMenu {
                                 Button { onDetail(goal.id) } label: { Label("Hedef detayları", systemImage: "info.circle") }
                                 if model.primaryGoal?.id != goal.id {

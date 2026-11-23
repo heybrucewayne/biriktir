@@ -27,15 +27,19 @@ enum AppLanguage: String {
 }
 
 enum AppColors {
-    static let background = Color(red: 0.025, green: 0.03, blue: 0.045)
-    static let lavender = Color(red: 0.67, green: 0.57, blue: 1.0)
-    static let blue = Color(red: 0.53, green: 0.70, blue: 1.0)
+    static let background = Color(red: 0.015, green: 0.018, blue: 0.024)
+    static let lavender = Color(red: 1.0, green: 0.055, blue: 0.12)
+    static let blue = Color(red: 0.82, green: 0.015, blue: 0.075)
     static let mint = Color(red: 0.43, green: 0.88, blue: 0.70)
-    static let glassTint = Color(red: 0.075, green: 0.08, blue: 0.115)
+    static let glassTint = Color(red: 0.075, green: 0.080, blue: 0.092)
     static let secondary = Color.white.opacity(0.58)
 }
 
 extension View {
+    func appEntrance(delay: Double = 0) -> some View {
+        modifier(AppEntranceModifier(delay: delay))
+    }
+
     @ViewBuilder
     func liquidGlass<S: Shape>(in shape: S) -> some View {
         if #available(iOS 26.0, *) {
@@ -59,11 +63,41 @@ extension View {
     }
 }
 
+private struct AppEntranceModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isVisible = false
+    let delay: Double
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(reduceMotion || isVisible ? 1 : 0)
+            .offset(y: reduceMotion || isVisible ? 0 : 9)
+            .onAppear {
+                guard !reduceMotion else {
+                    isVisible = true
+                    return
+                }
+                withAnimation(.spring(response: 0.48, dampingFraction: 0.86).delay(delay)) {
+                    isVisible = true
+                }
+            }
+    }
+}
+
+struct AppPressButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.975 : 1)
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(.spring(response: 0.24, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
 struct AppBackground: View {
     var body: some View {
         ZStack(alignment: .top) {
             AppColors.background.ignoresSafeArea()
-            RadialGradient(colors: [AppColors.lavender.opacity(0.13), .clear], center: .topTrailing,
+            RadialGradient(colors: [AppColors.lavender.opacity(0.075), .clear], center: .topTrailing,
                            startRadius: 0, endRadius: 360)
                 .frame(height: 470)
                 .ignoresSafeArea()

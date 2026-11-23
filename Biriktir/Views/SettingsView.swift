@@ -8,6 +8,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 22) {
                 HStack(alignment: .center) {
                     Text("Ayarlar").font(.system(size: 30, weight: .bold, design: .rounded)).tracking(-0.7)
+                        .appEntrance()
                     Spacer()
                     AnimatedGIFView(resourceName: "BiriktirCatAvatar")
                         .frame(width: 58, height: 58)
@@ -50,6 +51,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .appEntrance(delay: 0.05)
 
                 GlassPanel(radius: 26) {
                     VStack(alignment: .leading, spacing: 14) {
@@ -72,6 +74,7 @@ struct SettingsView: View {
                         }
                     }
                 }
+                .appEntrance(delay: 0.14)
                 Spacer(minLength: 20)
             }
             .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 28)
@@ -93,7 +96,7 @@ struct SettingsView: View {
                     if selected { Capsule().fill(.white.opacity(0.14)) }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AppPressButtonStyle())
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

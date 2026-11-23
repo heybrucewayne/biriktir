@@ -12,9 +12,9 @@ struct HomeView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 16) {
-                header
+                header.appEntrance()
                 if model.activeGoals.isEmpty {
-                    emptyState
+                    emptyState.appEntrance(delay: 0.06)
                 } else {
                     goalSection
                     monthlyCard
@@ -23,8 +23,6 @@ struct HomeView: View {
                 }
                 if !model.countdowns.isEmpty {
                     countdownSection
-                        .offset(y: appeared ? 0 : 18)
-                        .opacity(appeared ? 1 : 0)
                 }
                 Spacer(minLength: 12)
             }
@@ -57,7 +55,7 @@ struct HomeView: View {
                     .liquidGlass(in: Circle())
                     .overlay(Circle().strokeBorder(.white.opacity(0.17), lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AppPressButtonStyle())
             .accessibilityLabel("Yeni ekle")
         }
     }
@@ -93,22 +91,24 @@ struct HomeView: View {
 
     private var goalSection: some View {
         VStack(spacing: 12) {
-            ForEach(model.orderedGoals) { goal in
+            ForEach(Array(model.orderedGoals.enumerated()), id: \.element.id) { index, goal in
                 GoalWidget(
                     goal: goal,
                     onDetail: { onDetail(goal.id) },
                     onAdjust: { direction in onAdjust(goal.id, direction) }
                 )
+                .appEntrance(delay: Double(index) * 0.055)
             }
         }
     }
 
     private var countdownSection: some View {
         VStack(spacing: 12) {
-            ForEach(model.orderedCountdowns) { countdown in
+            ForEach(Array(model.orderedCountdowns.enumerated()), id: \.element.id) { index, countdown in
                 CountdownCard(countdown: countdown) {
                     onCountdownDetail(countdown.id)
                 }
+                .appEntrance(delay: Double(index) * 0.065)
             }
         }
     }
@@ -174,7 +174,7 @@ struct GoalWidget: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AppPressButtonStyle())
             .accessibilityLabel("\(goal.name), \(Money.string(goal.currentAmount)) birikti, \(Money.string(max(0, goal.targetAmount - goal.currentAmount))) kaldı, ayrıntıları aç")
 
             HStack(spacing: 8) {
@@ -183,12 +183,13 @@ struct GoalWidget: View {
             }
         }
         .padding(18)
-        .background {
-            RoundedRectangle(cornerRadius: 25, style: .continuous)
-                .fill(LinearGradient(colors: [Color(red: 0.12, green: 0.125, blue: 0.17).opacity(0.62), Color(red: 0.055, green: 0.06, blue: 0.08).opacity(0.74)], startPoint: .topLeading, endPoint: .bottomTrailing))
-        }
         .liquidGlass(in: RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.20), .white.opacity(0.045)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+        .overlay {
+            GoalProgressOutline(progress: goal.progress, cornerRadius: 25)
+                .padding(0.6)
+                .allowsHitTesting(false)
+        }
         .shadow(color: AppColors.lavender.opacity(0.055), radius: 16, y: 8)
     }
 
@@ -252,6 +253,29 @@ private struct LuminousGoalProgressBar: View {
     }
 }
 
+private struct GoalProgressOutline: View {
+    let progress: Double
+    let cornerRadius: CGFloat
+    @State private var animatedProgress = 0.0
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .trim(from: 0, to: min(max(animatedProgress, 0), 1))
+            .stroke(
+                LinearGradient(colors: [AppColors.lavender.opacity(0.72), AppColors.blue.opacity(0.48)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                style: StrokeStyle(lineWidth: 1.35, lineCap: .round)
+            )
+            .shadow(color: AppColors.lavender.opacity(0.18), radius: 4, y: 0)
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.0).delay(0.12)) { animatedProgress = progress }
+            }
+            .onChange(of: progress) { _, newValue in
+                withAnimation(.easeInOut(duration: 0.55)) { animatedProgress = newValue }
+            }
+            .accessibilityHidden(true)
+    }
+}
+
 private struct CountdownCard: View {
     let countdown: CountdownItem
     var action: () -> Void
@@ -302,7 +326,7 @@ private struct CountdownCard: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(AppPressButtonStyle())
             .accessibilityLabel("\(countdown.name), \(accessibilityDays)")
             .accessibilityHint("Geri sayım ayrıntılarını görüntüle")
             .animation(.easeInOut(duration: 0.25), value: days)
@@ -375,7 +399,7 @@ private struct ActionTile: View {
             .liquidGlass(in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AppPressButtonStyle())
     }
 }
 
@@ -405,7 +429,7 @@ struct GoalRow: View {
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white.opacity(0.38))
                 }
             }
-            .buttonStyle(.plain)
+        .buttonStyle(AppPressButtonStyle())
 
             if let onSetPrimary {
                 Button(action: onSetPrimary) {
@@ -415,7 +439,7 @@ struct GoalRow: View {
                         .frame(width: 34, height: 34)
                         .background(isPrimary ? AppColors.lavender.opacity(0.14) : .white.opacity(0.045), in: Circle())
             }
-                .buttonStyle(.plain)
+        .buttonStyle(AppPressButtonStyle())
                 .accessibilityLabel(isPrimary ? "Ana sayfadaki öncelikli hedef" : "Ana sayfada öncelikli hedef yap")
                 .disabled(isPrimary)
             }
@@ -423,6 +447,11 @@ struct GoalRow: View {
         .padding(14)
         .liquidGlass(in: RoundedRectangle(cornerRadius: 21, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 21, style: .continuous).strokeBorder(.white.opacity(0.10), lineWidth: 1))
+        .overlay {
+            GoalProgressOutline(progress: goal.progress, cornerRadius: 21)
+                .padding(0.6)
+                .allowsHitTesting(false)
+        }
     }
 }
 
@@ -430,11 +459,13 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(Color(red: 0.07, green: 0.06, blue: 0.12))
+            .foregroundStyle(Color(red: 0.10, green: 0.012, blue: 0.02))
             .padding(.horizontal, 18)
             .padding(.vertical, 13)
             .background(LinearGradient(colors: [Color.white, AppColors.lavender.opacity(0.88)], startPoint: .topLeading, endPoint: .bottomTrailing), in: Capsule())
             .shadow(color: AppColors.lavender.opacity(0.2), radius: 14, y: 5)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .animation(.spring(response: 0.24, dampingFraction: 0.72), value: configuration.isPressed)
     }
 }

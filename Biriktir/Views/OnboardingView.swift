@@ -74,6 +74,7 @@ struct OnboardingView: View {
                 .background(.white.opacity(0.055), in: Capsule())
                 .overlay(Capsule().strokeBorder(.white.opacity(0.09), lineWidth: 1))
                 .accessibilityHint("Tanıtımı geçip ana ekrana git")
+                .buttonStyle(AppPressButtonStyle())
         }
     }
 
