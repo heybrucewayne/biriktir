@@ -7,8 +7,6 @@ struct HomeView: View {
     var onAdjust: (UUID, AdjustmentDirection) -> Void
     var onDetail: (UUID) -> Void
     var onCountdownDetail: (UUID) -> Void
-    var onGoals: () -> Void
-    var onReports: () -> Void
     @State private var appeared = false
 
     var body: some View {
@@ -95,27 +93,11 @@ struct HomeView: View {
 
     private var goalSection: some View {
         VStack(spacing: 12) {
-            HStack {
-                Text("Hedeflerin")
-                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                Spacer()
-                Button(action: onGoals) {
-                    HStack(spacing: 4) {
-                        Text("Tümünü gör")
-                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold))
-                    }
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppColors.secondary)
-                }
-                .buttonStyle(.plain)
-            }
             ForEach(model.orderedGoals) { goal in
                 GoalWidget(
                     goal: goal,
                     onDetail: { onDetail(goal.id) },
-                    onAdjust: { direction in onAdjust(goal.id, direction) },
-                    onReports: onReports
+                    onAdjust: { direction in onAdjust(goal.id, direction) }
                 )
             }
         }
@@ -152,57 +134,55 @@ struct GoalWidget: View {
     let goal: SavingsGoal
     var onDetail: () -> Void
     var onAdjust: (AdjustmentDirection) -> Void
-    var onReports: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Button(action: onDetail) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        ProgressRing(progress: goal.progress, size: 76, lineWidth: 7)
-                        Text("%\(Money.percent(goal.progress * 100))")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                VStack(alignment: .leading, spacing: 13) {
+                    HStack(spacing: 8) {
+                        Image(systemName: goal.symbol)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppColors.blue)
+                        Text(goal.name)
+                            .font(.system(size: 19, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    .id(goal.id)
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Image(systemName: goal.symbol)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(AppColors.blue)
-                            Text(goal.name)
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                        }
-                        Text(Money.string(goal.currentAmount))
-                            .font(.system(size: 21, weight: .semibold, design: .rounded))
-                            .tracking(-0.4)
-                            .foregroundStyle(.white.opacity(0.94))
-                            .lineLimit(1)
                             .minimumScaleFactor(0.75)
-                            .contentTransition(.numericText())
+                        Spacer(minLength: 4)
+                        Text(verbatim: AppLanguage.current == .english
+                             ? "\(Money.percent(goal.progress * 100))%"
+                             : "%\(Money.percent(goal.progress * 100))")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(AppColors.lavender)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(AppColors.lavender.opacity(0.10), in: Capsule())
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white.opacity(0.42))
                     }
-                    Spacer(minLength: 2)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.42))
+
+                    HStack(alignment: .bottom, spacing: 12) {
+                        progressAmount(title: "Biriken", amount: goal.currentAmount, alignment: .leading)
+                        Spacer(minLength: 8)
+                        progressAmount(title: "Kalan", amount: max(0, goal.targetAmount - goal.currentAmount), alignment: .trailing)
+                    }
+
+                    LuminousGoalProgressBar(progress: goal.progress)
+                        .frame(height: 15)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(goal.name), \(Money.string(goal.currentAmount)), ayrıntıları aç")
+            .accessibilityLabel("\(goal.name), \(Money.string(goal.currentAmount)) birikti, \(Money.string(max(0, goal.targetAmount - goal.currentAmount))) kaldı, ayrıntıları aç")
 
             HStack(spacing: 8) {
                 ActionTile(title: "Ekle", symbol: "plus", tint: AppColors.mint) { onAdjust(.deposit) }
                 ActionTile(title: "Çıkar", symbol: "minus", tint: .white.opacity(0.84)) { onAdjust(.withdraw) }
-                ActionTile(title: "Rapor", symbol: "chart.bar.xaxis", tint: AppColors.lavender, action: onReports)
             }
         }
-        .padding(15)
+        .padding(18)
         .background {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
                 .fill(LinearGradient(colors: [Color(red: 0.12, green: 0.125, blue: 0.17).opacity(0.62), Color(red: 0.055, green: 0.06, blue: 0.08).opacity(0.74)], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -210,6 +190,65 @@ struct GoalWidget: View {
         .liquidGlass(in: RoundedRectangle(cornerRadius: 25, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.20), .white.opacity(0.045)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
         .shadow(color: AppColors.lavender.opacity(0.055), radius: 16, y: 8)
+    }
+
+    private func progressAmount(title: String, amount: Int, alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 3) {
+            Text(LocalizedStringKey(title))
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .tracking(0.7)
+                .textCase(.uppercase)
+                .foregroundStyle(AppColors.secondary)
+            Text(Money.string(amount))
+                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .tracking(-0.2)
+                .foregroundStyle(.white.opacity(0.94))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .contentTransition(.numericText())
+        }
+    }
+}
+
+private struct LuminousGoalProgressBar: View {
+    let progress: Double
+    @State private var animatedProgress = 0.0
+
+    var body: some View {
+        GeometryReader { geometry in
+            let fillWidth = geometry.size.width * min(max(animatedProgress, 0), 1)
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(LinearGradient(colors: [AppColors.lavender.opacity(0.14), .white.opacity(0.075)], startPoint: .leading, endPoint: .trailing))
+                if fillWidth > 0 {
+                    Capsule()
+                        .fill(AppColors.lavender.opacity(0.52))
+                        .frame(width: fillWidth)
+                        .blur(radius: 8)
+                    Capsule()
+                        .fill(LinearGradient(colors: [AppColors.blue, AppColors.lavender, .white.opacity(0.96)], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: fillWidth)
+                        .overlay(alignment: .trailing) {
+                            if fillWidth > 9 {
+                                Capsule().fill(.white.opacity(0.92)).frame(width: 2, height: 9).padding(.trailing, 2)
+                            }
+                        }
+                        .shadow(color: AppColors.lavender.opacity(0.78), radius: 8, y: 0)
+                }
+                Capsule().strokeBorder(.white.opacity(0.14), lineWidth: 1)
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.9, dampingFraction: 0.82).delay(0.12)) {
+                animatedProgress = progress
+            }
+        }
+        .onChange(of: progress) { _, newValue in
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.84)) {
+                animatedProgress = newValue
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -220,7 +259,11 @@ private struct CountdownCard: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in
             let days = countdown.daysRemaining(asOf: context.date)
-            let accessibilityDays = days.map { $0 == 0 ? "bugün" : "\($0) gün kaldı" } ?? "süre geçti"
+            let accessibilityDays = days.map { value in
+                if value == 0 { return AppLanguage.current == .english ? "today" : "bugün" }
+                if AppLanguage.current == .english { return value == 1 ? "1 day left" : "\(value) days left" }
+                return "\(value) gün kaldı"
+            } ?? (AppLanguage.current == .english ? "expired" : "süre geçti")
             Button(action: action) {
                 GlassPanel(radius: 23) {
                     HStack(spacing: 12) {
@@ -238,7 +281,7 @@ private struct CountdownCard: View {
                                         .tracking(-1.2)
                                         .foregroundStyle(AppColors.lavender)
                                         .contentTransition(.numericText())
-                                    Text(days == 0 ? "BUGÜN" : "GÜN KALDI")
+                                    Text(LocalizedStringKey(days == 0 ? "BUGÜN" : (days == 1 ? "1 GÜN KALDI" : "GÜN KALDI")))
                                         .font(.system(size: 10, weight: .semibold, design: .rounded))
                                         .tracking(0.9)
                                         .foregroundStyle(AppColors.secondary)
@@ -268,7 +311,7 @@ private struct CountdownCard: View {
 }
 
 struct GoalCelebrationToast: View {
-    let title: String
+    let milestone: Int?
     let goalName: String
 
     var body: some View {
@@ -278,9 +321,18 @@ struct GoalCelebrationToast: View {
                 .frame(width: 42, height: 42)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
+                Group {
+                    if let milestone {
+                        HStack(spacing: 3) {
+                            Text(verbatim: AppLanguage.current == .english ? "\(milestone)%" : "%\(milestone)")
+                            Text("tamamlandı")
+                        }
+                    } else {
+                        Text("Hedef tamamlandı")
+                    }
+                }
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
                 Text(goalName)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(AppColors.secondary)
@@ -310,16 +362,16 @@ private struct ActionTile: View {
         Button(action: action) {
             HStack(spacing: 5) {
                 Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(tint)
-                Text(title)
-                    .font(.system(size: 12, weight: .medium))
+                Text(LocalizedStringKey(title))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.9))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 44)
+            .frame(height: 52)
             .liquidGlass(in: RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
         }

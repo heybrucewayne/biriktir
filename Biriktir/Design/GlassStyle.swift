@@ -1,5 +1,31 @@
 import SwiftUI
 
+enum AppLanguage: String {
+    case turkish = "tr"
+    case english = "en"
+
+    static let storageKey = "biriktir.language.v1"
+
+    var locale: Locale {
+        switch self {
+        case .turkish: Locale(identifier: "tr_TR")
+        case .english: Locale(identifier: "en_US")
+        }
+    }
+
+    static var current: AppLanguage {
+        AppLanguage(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "tr") ?? .turkish
+    }
+
+    static func dateString(_ date: Date, dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style = .none) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = current.locale
+        formatter.dateStyle = dateStyle
+        formatter.timeStyle = timeStyle
+        return formatter.string(from: date)
+    }
+}
+
 enum AppColors {
     static let background = Color(red: 0.025, green: 0.03, blue: 0.045)
     static let lavender = Color(red: 0.67, green: 0.57, blue: 1.0)
@@ -69,7 +95,8 @@ struct GlassPanel<Content: View>: View {
 struct Eyebrow: View {
     let title: String
     var body: some View {
-        Text(title.uppercased())
+        Text(LocalizedStringKey(title))
+            .textCase(.uppercase)
             .font(.system(size: 11, weight: .semibold, design: .rounded))
             .tracking(1.15)
             .foregroundStyle(AppColors.secondary)

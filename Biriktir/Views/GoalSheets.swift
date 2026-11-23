@@ -35,7 +35,7 @@ struct AddGoalSheet: View {
                                 Button { withAnimation(.easeInOut(duration: 0.18)) { selectedSymbol = symbol } } label: {
                                     VStack(spacing: 8) {
                                         Image(systemName: symbol).font(.system(size: 18, weight: .medium))
-                                        Text(title).font(.system(size: 11, weight: .medium))
+                                        Text(LocalizedStringKey(title)).font(.system(size: 11, weight: .medium))
                                     }
                                     .foregroundStyle(selected ? .white : AppColors.secondary)
                                     .frame(maxWidth: .infinity).frame(height: 70)
@@ -144,7 +144,7 @@ struct AdjustmentSheet: View {
             AppBackground()
             VStack(alignment: .leading, spacing: 20) {
                 sheetHeader(title: isDeposit ? "Birikim ekle" : "Birikim çıkar") { dismiss() }
-                Text(goal?.name ?? "Hedef")
+                Text(goal?.name ?? "")
                     .font(.system(size: 23, weight: .semibold, design: .rounded)).tracking(-0.3)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("₺").font(.system(size: 24, weight: .medium, design: .rounded)).foregroundStyle(AppColors.secondary)
@@ -181,7 +181,7 @@ struct AdjustmentSheet: View {
                 }
                 Spacer(minLength: 0)
                 Button(action: saveAdjustment) {
-                    Text(isDeposit ? "Birikime ekle" : "Birikimden çıkar").frame(maxWidth: .infinity)
+                    Text(LocalizedStringKey(isDeposit ? "Birikime ekle" : "Birikimden çıkar")).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(amount == 0)
@@ -235,7 +235,7 @@ struct CountdownDetailSheet: View {
                                         .font(.system(size: 58, weight: .semibold, design: .rounded))
                                         .tracking(-1.5)
                                         .foregroundStyle(AppColors.lavender)
-                                    Text(days == 0 ? "BUGÜN" : "GÜN KALDI")
+                                    Text(LocalizedStringKey(days == 0 ? "BUGÜN" : (days == 1 ? "1 GÜN KALDI" : "GÜN KALDI")))
                                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                                         .tracking(0.9)
                                         .foregroundStyle(AppColors.secondary)
@@ -283,10 +283,7 @@ struct CountdownDetailSheet: View {
     }
 
     private func dateText(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
-        formatter.dateFormat = "d MMMM yyyy"
-        return formatter.string(from: date)
+        AppLanguage.dateString(date, dateStyle: .long)
     }
 }
 
@@ -314,7 +311,7 @@ struct GoalDetailSheet: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(goal.name).font(.system(size: 21, weight: .semibold, design: .rounded)).foregroundStyle(.white)
                                     Text(Money.string(goal.currentAmount)).font(.system(size: 23, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                                    Text("Hedef: \(Money.string(goal.targetAmount))").font(.system(size: 12)).foregroundStyle(AppColors.secondary)
+                Text("Hedef: \(Money.string(goal.targetAmount))").font(.system(size: 12)).foregroundStyle(AppColors.secondary)
                                 }
                                 Spacer(minLength: 0)
                             }
@@ -374,7 +371,7 @@ private struct DetailMetric: View {
             VStack(alignment: .leading, spacing: 8) {
                 Image(systemName: symbol).font(.system(size: 13, weight: .medium)).foregroundStyle(AppColors.lavender)
                 Text(value).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.75)
-                Text(title).font(.system(size: 10, weight: .medium)).foregroundStyle(AppColors.secondary)
+                Text(LocalizedStringKey(title)).font(.system(size: 10, weight: .medium)).foregroundStyle(AppColors.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -384,10 +381,7 @@ private struct DetailMetric: View {
 private struct EntryRow: View {
     let entry: SavingsEntry
     private var dateText: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
-        formatter.dateFormat = "d MMMM, HH:mm"
-        return formatter.string(from: entry.date)
+        AppLanguage.dateString(entry.date, dateStyle: .medium, timeStyle: .short)
     }
 
     var body: some View {
@@ -398,7 +392,7 @@ private struct EntryRow: View {
                 .frame(width: 38, height: 38)
                 .background((entry.isDeposit ? AppColors.mint : Color.white).opacity(0.09), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
-                Text(entry.isDeposit ? "Birikim eklendi" : "Birikim çıkarıldı")
+                Text(LocalizedStringKey(entry.isDeposit ? "Birikim eklendi" : "Birikim çıkarıldı"))
                     .font(.system(size: 13, weight: .medium)).foregroundStyle(.white)
                 Text(dateText).font(.system(size: 10, weight: .medium)).foregroundStyle(AppColors.secondary)
             }
@@ -423,7 +417,7 @@ private func sheetHeader(title: String, close: @escaping () -> Void) -> some Vie
         .buttonStyle(.plain)
         .accessibilityLabel("Kapat")
         Spacer()
-        Text(title).font(.system(size: 16, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+        Text(LocalizedStringKey(title)).font(.system(size: 16, weight: .semibold, design: .rounded)).foregroundStyle(.white)
         Spacer()
         Color.clear.frame(width: 35, height: 35)
     }
@@ -431,7 +425,7 @@ private func sheetHeader(title: String, close: @escaping () -> Void) -> some Vie
 
 private func formSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
     VStack(alignment: .leading, spacing: 8) {
-        Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColors.secondary)
+        Text(LocalizedStringKey(title)).font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColors.secondary)
         content()
             .font(.system(size: 15, weight: .medium))
             .foregroundStyle(.white)

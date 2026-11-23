@@ -51,7 +51,7 @@ struct SavingsEntry: Codable, Identifiable {
 
 struct GoalCelebrationEvent: Identifiable, Equatable {
     let id = UUID()
-    let title: String
+    let milestone: Int?
     let goalName: String
 }
 
@@ -181,14 +181,14 @@ final class SavingsModel {
         goals[index].currentAmount = nextAmount
         let targetAmount = goals[index].targetAmount
         if targetAmount > 0, previousAmount < targetAmount, nextAmount >= targetAmount {
-            celebrationEvent = GoalCelebrationEvent(title: "Hedef tamamlandı", goalName: goals[index].name)
+            celebrationEvent = GoalCelebrationEvent(milestone: nil, goalName: goals[index].name)
         } else if amount > 0, targetAmount > 0 {
             let previousProgress = Double(previousAmount) / Double(targetAmount)
             let nextProgress = Double(nextAmount) / Double(targetAmount)
             if let milestone = [75, 50, 25].first(where: {
                 previousProgress < Double($0) / 100 && nextProgress >= Double($0) / 100
             }) {
-                celebrationEvent = GoalCelebrationEvent(title: "%\(milestone) tamamlandı", goalName: goals[index].name)
+                celebrationEvent = GoalCelebrationEvent(milestone: milestone, goalName: goals[index].name)
             }
         }
         entries.append(SavingsEntry(id: UUID(), goalID: goalID, amount: actualChange, date: .now))
@@ -226,7 +226,7 @@ final class SavingsModel {
 enum Money {
     static func string(_ amount: Int) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.locale = AppLanguage.current.locale
         formatter.numberStyle = .currency
         formatter.currencyCode = "TRY"
         formatter.currencySymbol = "₺"
@@ -243,7 +243,7 @@ enum Money {
 
     static func percent(_ value: Double) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.locale = AppLanguage.current.locale
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = 1
         formatter.minimumFractionDigits = 0

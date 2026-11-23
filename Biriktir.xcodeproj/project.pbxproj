@@ -22,6 +22,7 @@
 		A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000014 /* BiriktirCatBreathing.gif */; };
 		A10000000000000000000014 /* BiriktirCatAvatar.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000015 /* BiriktirCatAvatar.gif */; };
 		A10000000000000000000015 /* BiriktirCatStanding.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000016 /* BiriktirCatStanding.gif */; };
+		A10000000000000000000016 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000017 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		B20000000000000000000014 /* BiriktirCatBreathing.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatBreathing.gif; sourceTree = "<group>"; };
 		B20000000000000000000015 /* BiriktirCatAvatar.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatAvatar.gif; sourceTree = "<group>"; };
 		B20000000000000000000016 /* BiriktirCatStanding.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatStanding.gif; sourceTree = "<group>"; };
+		B20000000000000000000018 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -62,6 +64,7 @@
 				C30000000000000000000004 /* Design */,
 				C30000000000000000000005 /* Views */,
 				C30000000000000000000007 /* Resources */,
+				B20000000000000000000017 /* Localizable.strings */,
 			);
 		};
 		C30000000000000000000003 /* Models */ = {isa = PBXGroup; path = Models; sourceTree = "<group>"; children = (B20000000000000000000002 /* SavingsModel.swift */,); };
@@ -69,6 +72,7 @@
 		C30000000000000000000005 /* Views */ = {isa = PBXGroup; path = Views; sourceTree = "<group>"; children = (B20000000000000000000004 /* ContentView.swift */, B20000000000000000000005 /* HomeView.swift */, B20000000000000000000006 /* GoalsView.swift */, B20000000000000000000007 /* ReportsView.swift */, B20000000000000000000008 /* SettingsView.swift */, B20000000000000000000009 /* GoalSheets.swift */, B20000000000000000000011 /* OnboardingView.swift */,); };
 		C30000000000000000000006 /* Products */ = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (B20000000000000000000010 /* Biriktir.app */,); };
 		C30000000000000000000007 /* Resources */ = {isa = PBXGroup; path = Resources; sourceTree = "<group>"; children = (B20000000000000000000012 /* BiriktirCat.gif */, B20000000000000000000014 /* BiriktirCatBreathing.gif */, B20000000000000000000015 /* BiriktirCatAvatar.gif */, B20000000000000000000016 /* BiriktirCatStanding.gif */,); };
+		B20000000000000000000017 /* Localizable.strings */ = {isa = PBXVariantGroup; children = (B20000000000000000000018 /* en */,); name = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -91,9 +95,9 @@
 			attributes = {BuildIndependentTargetsInParallel = 1; LastUpgradeCheck = 2700; }; 
 			buildConfigurationList = E60000000000000000000001 /* Build configuration list for PBXProject "Biriktir" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
+			developmentRegion = tr;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base,);
+			knownRegions = (en, tr, Base,);
 			mainGroup = C30000000000000000000001;
 			productRefGroup = C30000000000000000000006 /* Products */;
 			projectDirPath = "";
@@ -116,7 +120,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
-		F70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000011 /* BiriktirCat.gif in Resources */, A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */, A10000000000000000000014 /* BiriktirCatAvatar.gif in Resources */, A10000000000000000000015 /* BiriktirCatStanding.gif in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		F70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000011 /* BiriktirCat.gif in Resources */, A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */, A10000000000000000000014 /* BiriktirCatAvatar.gif in Resources */, A10000000000000000000015 /* BiriktirCatStanding.gif in Resources */, A10000000000000000000016 /* Localizable.strings in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

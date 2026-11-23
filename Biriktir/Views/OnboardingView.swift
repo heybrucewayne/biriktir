@@ -8,17 +8,17 @@ struct OnboardingView: View {
         OnboardingStep(
             title: "Hedefini\nbelirle.",
             symbol: "scope",
-            feature: "Hedef ve aylık plan"
+            mascotMessage: "Önce hedefini seç; tutarını ve tarihini belirle."
         ),
         OnboardingStep(
-            title: "İlerlemeni\nizle.",
-            symbol: "chart.bar.xaxis",
-            feature: "İlerleme ve raporlar"
-        ),
-        OnboardingStep(
-            title: "Birikimini\ntakip et.",
+            title: "Birikimini\nkaydet.",
             symbol: "arrow.up.arrow.down",
-            feature: "Birikim hareketleri"
+            mascotMessage: "Ekle ve Çıkar’a dokun; her hareketin kayda geçsin."
+        ),
+        OnboardingStep(
+            title: "İlerlemeni\ntakip et.",
+            symbol: "chart.bar.xaxis",
+            mascotMessage: "Raporlardan birikimini, geri sayımla önemli günlerini gör."
         )
     ]
 
@@ -30,10 +30,7 @@ struct OnboardingView: View {
                     .padding(.bottom, 8)
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: compact ? 12 : 18) {
-                        if currentStep == 0 {
-                            mascot(height: compact ? 170 : 230)
-                                .transition(.opacity.combined(with: .scale(scale: 0.94)))
-                        }
+                        mascot(height: compact ? 140 : 184)
                         stepContent
                             .id(currentStep)
                             .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -108,32 +105,30 @@ struct OnboardingView: View {
     private var stepContent: some View {
         let step = steps[currentStep]
         return VStack(spacing: 16) {
-            Text(step.title)
+            Text(LocalizedStringKey(step.title))
                 .font(.system(size: 29, weight: .semibold, design: .rounded))
                 .tracking(-0.55)
                 .lineSpacing(1)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 11) {
+            HStack(alignment: .top, spacing: 11) {
                 Image(systemName: step.symbol)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(AppColors.blue)
-                    .frame(width: 38, height: 38)
+                    .frame(width: 38, height: 38, alignment: .center)
                     .liquidGlass(in: Circle(), tint: AppColors.lavender.opacity(0.14))
-                Text(step.feature)
-                    .font(.system(size: 12, weight: .medium))
+                Text(LocalizedStringKey(step.mascotMessage))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.white.opacity(0.88))
-                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(AppColors.mint)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .liquidGlass(in: RoundedRectangle(cornerRadius: 21, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 21, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 13)
+            .liquidGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
             .padding(.top, 5)
         }
         .frame(maxWidth: .infinity)
@@ -178,6 +173,6 @@ struct OnboardingView: View {
 private struct OnboardingStep {
     let title: String
     let symbol: String
-    let feature: String
+    let mascotMessage: String
 }
 

@@ -3,7 +3,7 @@ import SwiftUI
 enum AppTab: String, CaseIterable, Identifiable {
     case home, goals, reports, settings
     var id: String { rawValue }
-    var title: String {
+    var title: LocalizedStringKey {
         switch self {
         case .home: "Ana Sayfa"
         case .goals: "Hedefler"
@@ -44,6 +44,7 @@ enum SheetRoute: Identifiable {
 struct ContentView: View {
     @Environment(SavingsModel.self) private var model
     @AppStorage("biriktir.onboarding.completed.v1") private var hasCompletedOnboarding = false
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.turkish.rawValue
     @State private var selectedTab: AppTab = .home
     @State private var sheetRoute: SheetRoute?
 
@@ -65,7 +66,7 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.35), value: hasCompletedOnboarding)
         .overlay(alignment: .top) {
             if let event = model.celebrationEvent {
-                GoalCelebrationToast(title: event.title, goalName: event.goalName)
+                GoalCelebrationToast(milestone: event.milestone, goalName: event.goalName)
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -114,6 +115,7 @@ struct ContentView: View {
                     .presentationCornerRadius(32)
             }
         }
+        .environment(\.locale, AppLanguage(rawValue: languageCode)?.locale ?? AppLanguage.turkish.locale)
     }
 
     private func select(_ tab: AppTab) {
@@ -123,7 +125,7 @@ struct ContentView: View {
     @ViewBuilder
     private var selectedScreen: some View {
         TabView(selection: $selectedTab) {
-            HomeView(onAddGoal: { sheetRoute = .addGoal }, onAddCountdown: { sheetRoute = .addCountdown }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onCountdownDetail: { id in sheetRoute = .countdownDetail(id: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
+            HomeView(onAddGoal: { sheetRoute = .addGoal }, onAddCountdown: { sheetRoute = .addCountdown }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onCountdownDetail: { id in sheetRoute = .countdownDetail(id: id) })
                 .tabItem { Label(AppTab.home.title, systemImage: AppTab.home.symbol) }
                 .tag(AppTab.home)
             GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })

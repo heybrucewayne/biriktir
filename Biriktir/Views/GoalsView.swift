@@ -74,7 +74,7 @@ private struct SummaryPill: View {
             VStack(alignment: .leading, spacing: 9) {
                 Image(systemName: symbol).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColors.lavender)
                 Text(value).font(.system(size: 17, weight: .semibold, design: .rounded)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.7)
-                Text(label).font(.system(size: 10, weight: .medium)).foregroundStyle(AppColors.secondary)
+                Text(LocalizedStringKey(label)).font(.system(size: 10, weight: .medium)).foregroundStyle(AppColors.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

@@ -85,7 +85,7 @@ struct ReportsView: View {
 
     private func rangeButton(_ title: String, index: Int) -> some View {
         Button { withAnimation(.easeInOut(duration: 0.25)) { selectedRange = index } } label: {
-            Text(title).font(.system(size: 12, weight: .semibold))
+            Text(LocalizedStringKey(title)).font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(selectedRange == index ? .white : AppColors.secondary)
                 .frame(maxWidth: .infinity).padding(.vertical, 8)
                 .background { if selectedRange == index { Capsule().fill(.white.opacity(0.13)) } }
@@ -95,7 +95,7 @@ struct ReportsView: View {
 
     private func metric(title: String, value: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(title).font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
+            Text(LocalizedStringKey(title)).font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
             Text(value).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.75)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -134,8 +134,10 @@ private struct SavingsBarChart: View {
 
     private func month(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "tr_TR")
-        formatter.dateFormat = "MMM"
-        return formatter.string(from: date).replacingOccurrences(of: ".", with: "").capitalized
+        formatter.locale = AppLanguage.current.locale
+        formatter.setLocalizedDateFormatFromTemplate("MMM")
+        return formatter.string(from: date)
+            .replacingOccurrences(of: ".", with: "")
+            .capitalized(with: AppLanguage.current.locale)
     }
 }

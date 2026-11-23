@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.turkish.rawValue
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
@@ -15,6 +17,18 @@ struct SettingsView: View {
                 GlassPanel(radius: 26) {
                     VStack(alignment: .leading, spacing: 17) {
                         Eyebrow(title: "Tercihler")
+                        HStack(spacing: 13) {
+                            SettingsIcon(symbol: "globe", tint: AppColors.blue)
+                            Text("Dil").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                            Spacer(minLength: 4)
+                            HStack(spacing: 3) {
+                                languageButton("Türkçe", code: AppLanguage.turkish.rawValue)
+                                languageButton("English", code: AppLanguage.english.rawValue)
+                            }
+                            .padding(3)
+                            .background(.black.opacity(0.2), in: Capsule())
+                        }
+                        Rectangle().fill(.white.opacity(0.08)).frame(height: 1)
                         HStack(spacing: 13) {
                             SettingsIcon(symbol: "moon.stars.fill", tint: AppColors.lavender)
                             VStack(alignment: .leading, spacing: 3) {
@@ -62,6 +76,25 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 28)
         }
+    }
+
+    private func languageButton(_ title: String, code: String) -> some View {
+        let selected = languageCode == code
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) { languageCode = code }
+        } label: {
+            Text(verbatim: title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(selected ? .white : AppColors.secondary)
+                .frame(minWidth: 56)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 8)
+                .background {
+                    if selected { Capsule().fill(.white.opacity(0.14)) }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
