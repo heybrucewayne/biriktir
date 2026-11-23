@@ -2,7 +2,6 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(SavingsModel.self) private var model
-    var onAddMenu: () -> Void
     var onAddGoal: () -> Void
     var onAddCountdown: () -> Void
     var onAdjust: (UUID, AdjustmentDirection) -> Void
@@ -16,25 +15,18 @@ struct HomeView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 16) {
                 header
-                if let goal = model.primaryGoal {
-                    GoalHero(goal: goal, onDetail: { onDetail(goal.id) },
-                             onAdjust: { direction in onAdjust(goal.id, direction) },
-                             onReports: onReports)
-                        .offset(y: appeared ? 0 : 12)
-                        .opacity(appeared ? 1 : 0)
+                if model.activeGoals.isEmpty {
+                    emptyState
+                } else {
+                    goalSection
                     monthlyCard
                         .offset(y: appeared ? 0 : 16)
                         .opacity(appeared ? 1 : 0)
-                } else {
-                    emptyState
                 }
                 if !model.countdowns.isEmpty {
                     countdownSection
                         .offset(y: appeared ? 0 : 18)
                         .opacity(appeared ? 1 : 0)
-                }
-                if model.activeGoals.count > 1 {
-                    goalSection
                 }
                 Spacer(minLength: 12)
             }
@@ -52,7 +44,14 @@ struct HomeView: View {
                 .tracking(-0.8)
                 .foregroundStyle(.white)
             Spacer()
-            Button(action: onAddMenu) {
+            Menu {
+                Button(action: onAddGoal) {
+                    Label("Hedef oluştur", systemImage: "target")
+                }
+                Button(action: onAddCountdown) {
+                    Label("Geri sayım ekle", systemImage: "calendar")
+                }
+            } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(.white)
@@ -111,30 +110,19 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
             }
-            ForEach(model.activeGoals.filter { $0.id != model.primaryGoal?.id }) { goal in
-                GoalRow(goal: goal, onOpen: { onDetail(goal.id) })
+            ForEach(model.orderedGoals) { goal in
+                GoalWidget(
+                    goal: goal,
+                    onDetail: { onDetail(goal.id) },
+                    onAdjust: { direction in onAdjust(goal.id, direction) },
+                    onReports: onReports
+                )
             }
         }
     }
 
     private var countdownSection: some View {
         VStack(spacing: 12) {
-            HStack {
-                Text("Geri sayımlar")
-                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                Spacer()
-                Button(action: onAddCountdown) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 34, height: 34)
-                        .liquidGlass(in: Circle())
-                        .overlay(Circle().strokeBorder(.white.opacity(0.15), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Geri sayım ekle")
-            }
             ForEach(model.orderedCountdowns) { countdown in
                 CountdownCard(countdown: countdown) {
                     onCountdownDetail(countdown.id)
@@ -146,7 +134,7 @@ struct HomeView: View {
     private var emptyState: some View {
         GlassPanel {
             VStack(spacing: 12) {
-                AnimatedGIFView(resourceName: "BiriktirCatBreathing")
+                AnimatedGIFView(resourceName: "BiriktirCatStanding")
                     .frame(width: 132, height: 124)
                     .accessibilityHidden(true)
                 Text("İlk hedefini belirle").font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -160,79 +148,68 @@ struct HomeView: View {
     }
 }
 
-struct GoalHero: View {
+struct GoalWidget: View {
     let goal: SavingsGoal
     var onDetail: () -> Void
     var onAdjust: (AdjustmentDirection) -> Void
     var onReports: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
-            HStack {
-                Spacer()
-                Button(action: onDetail) {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppColors.secondary)
-                        .frame(width: 34, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Hedef detayları")
-            }
-            ZStack {
-                Circle()
-                    .fill(AppColors.lavender.opacity(0.12))
-                    .frame(width: 200, height: 200)
-                    .blur(radius: 52)
-                ProgressRing(progress: goal.progress, size: 200, lineWidth: 14)
+        VStack(spacing: 12) {
+            Button(action: onDetail) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        ProgressRing(progress: goal.progress, size: 76, lineWidth: 7)
+                        Text("%\(Money.percent(goal.progress * 100))")
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
                     .id(goal.id)
-                VStack(spacing: 7) {
-                    Image(systemName: goal.symbol)
-                        .font(.system(size: 23, weight: .regular))
-                        .foregroundStyle(AppColors.blue.opacity(0.9))
-                        .padding(.bottom, 1)
-                    Text(goal.name)
-                        .font(.system(size: 18, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.92))
-                    Text(Money.string(goal.currentAmount))
-                        .font(.system(size: 31, weight: .semibold, design: .rounded))
-                        .tracking(-1.0)
-                        .foregroundStyle(.white)
-                        .minimumScaleFactor(0.75)
-                        .lineLimit(1)
-                        .contentTransition(.numericText())
-                    Text("Hedef: \(Money.string(goal.targetAmount))")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(AppColors.secondary)
-                    Text("%\(Money.percent(goal.progress * 100))")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.92))
-                        .contentTransition(.numericText())
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 6)
-                        .background(.white.opacity(0.10), in: Capsule())
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 1))
-                        .padding(.top, 2)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: goal.symbol)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(AppColors.blue)
+                            Text(goal.name)
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        }
+                        Text(Money.string(goal.currentAmount))
+                            .font(.system(size: 21, weight: .semibold, design: .rounded))
+                            .tracking(-0.4)
+                            .foregroundStyle(.white.opacity(0.94))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .contentTransition(.numericText())
+                    }
+                    Spacer(minLength: 2)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.42))
                 }
-                .frame(maxWidth: 190)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity)
-                .padding(.vertical, 0)
-            HStack(spacing: 10) {
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(goal.name), \(Money.string(goal.currentAmount)), ayrıntıları aç")
+
+            HStack(spacing: 8) {
                 ActionTile(title: "Ekle", symbol: "plus", tint: AppColors.mint) { onAdjust(.deposit) }
                 ActionTile(title: "Çıkar", symbol: "minus", tint: .white.opacity(0.84)) { onAdjust(.withdraw) }
                 ActionTile(title: "Rapor", symbol: "chart.bar.xaxis", tint: AppColors.lavender, action: onReports)
             }
         }
-        .padding(17)
+        .padding(15)
         .background {
-            RoundedRectangle(cornerRadius: 31, style: .continuous)
-                .fill(LinearGradient(colors: [Color(red: 0.12, green: 0.125, blue: 0.17).opacity(0.75), Color(red: 0.055, green: 0.06, blue: 0.08).opacity(0.74)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .fill(LinearGradient(colors: [Color(red: 0.12, green: 0.125, blue: 0.17).opacity(0.62), Color(red: 0.055, green: 0.06, blue: 0.08).opacity(0.74)], startPoint: .topLeading, endPoint: .bottomTrailing))
         }
-        .liquidGlass(in: RoundedRectangle(cornerRadius: 31, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 31, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.21), .white.opacity(0.04)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
-        .shadow(color: AppColors.lavender.opacity(0.08), radius: 26, y: 14)
+        .liquidGlass(in: RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 25, style: .continuous).strokeBorder(LinearGradient(colors: [.white.opacity(0.20), .white.opacity(0.045)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+        .shadow(color: AppColors.lavender.opacity(0.055), radius: 16, y: 8)
     }
 }
 
@@ -290,7 +267,8 @@ private struct CountdownCard: View {
     }
 }
 
-struct GoalCompletionToast: View {
+struct GoalCelebrationToast: View {
+    let title: String
     let goalName: String
 
     var body: some View {
@@ -300,7 +278,7 @@ struct GoalCompletionToast: View {
                 .frame(width: 42, height: 42)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Hedef tamamlandı")
+                Text(title)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)
                 Text(goalName)
@@ -330,14 +308,20 @@ private struct ActionTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 7) {
-                Image(systemName: symbol).font(.system(size: 18, weight: .medium)).foregroundStyle(tint)
-                Text(title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white.opacity(0.88))
+            HStack(spacing: 5) {
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 65)
-            .liquidGlass(in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
+            .frame(height: 44)
+            .liquidGlass(in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 1))
         }
         .buttonStyle(.plain)
     }

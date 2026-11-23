@@ -4,29 +4,12 @@ struct SettingsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .center) {
                     Text("Ayarlar").font(.system(size: 30, weight: .bold, design: .rounded)).tracking(-0.7)
-                    Text("Biriktir deneyimini kişiselleştir.").font(.system(size: 14)).foregroundStyle(AppColors.secondary)
-                }
-
-                GlassPanel(radius: 26) {
-                    HStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: 9) {
-                            Eyebrow(title: "Kediden küçük bir not")
-                            Text("Ufak adımlar da\nbirikime dönüşür.")
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text("Kendi hızında ilerle.")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(AppColors.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        AnimatedGIFView(resourceName: "BiriktirCatBreathing")
-                            .frame(width: 110, height: 126)
-                            .accessibilityHidden(true)
-                    }
-                    .frame(minHeight: 126)
+                    Spacer()
+                    AnimatedGIFView(resourceName: "BiriktirCatAvatar")
+                        .frame(width: 58, height: 58)
+                        .accessibilityHidden(true)
                 }
 
                 GlassPanel(radius: 26) {
@@ -63,17 +46,14 @@ struct SettingsView: View {
                                     .fill(LinearGradient(colors: [AppColors.lavender.opacity(0.35), AppColors.blue.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing))
                                 Image(systemName: "circle.hexagongrid.fill").font(.system(size: 20)).foregroundStyle(.white)
                             }.frame(width: 46, height: 46)
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("Biriktir").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                                Text("Sade hedefler, güzel yarınlar.").font(.system(size: 11)).foregroundStyle(AppColors.secondary)
-                            }
+                            Text("Biriktir").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
                             Spacer()
                             Text("1.0").font(.system(size: 11, weight: .medium, design: .rounded)).foregroundStyle(AppColors.secondary)
                         }
                         Rectangle().fill(.white.opacity(0.08)).frame(height: 1)
                         HStack(spacing: 9) {
                             Image(systemName: "lock.fill").font(.system(size: 11)).foregroundStyle(AppColors.mint)
-                            Text("Birikim bilgilerin bu cihazda saklanır.")
+                            Text("Bu cihazda saklanır.")
                                 .font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
                         }
                     }

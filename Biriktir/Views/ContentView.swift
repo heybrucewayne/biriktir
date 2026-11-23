@@ -24,7 +24,6 @@ enum AppTab: String, CaseIterable, Identifiable {
 enum AdjustmentDirection { case deposit, withdraw }
 
 enum SheetRoute: Identifiable {
-    case addMenu
     case addGoal
     case addCountdown
     case adjust(goalID: UUID, direction: AdjustmentDirection)
@@ -33,7 +32,6 @@ enum SheetRoute: Identifiable {
 
     var id: String {
         switch self {
-        case .addMenu: "add-menu"
         case .addGoal: "add-goal"
         case .addCountdown: "add-countdown"
         case .adjust(let id, let direction): "adjust-\(id)-\(direction)"
@@ -66,8 +64,8 @@ struct ContentView: View {
         }
         .animation(.easeInOut(duration: 0.35), value: hasCompletedOnboarding)
         .overlay(alignment: .top) {
-            if let event = model.completionEvent {
-                GoalCompletionToast(goalName: event.goalName)
+            if let event = model.celebrationEvent {
+                GoalCelebrationToast(title: event.title, goalName: event.goalName)
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -79,22 +77,14 @@ struct ContentView: View {
                             return
                         }
                         withAnimation(.easeOut(duration: 0.3)) {
-                            model.dismissCompletionEvent(id: event.id)
+                            model.dismissCelebrationEvent(id: event.id)
                         }
                     }
             }
         }
-        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.completionEvent?.id)
+        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.celebrationEvent?.id)
         .sheet(item: $sheetRoute) { route in
             switch route {
-            case .addMenu:
-                AddMenuSheet(
-                    onAddGoal: { sheetRoute = .addGoal },
-                    onAddCountdown: { sheetRoute = .addCountdown }
-                )
-                .presentationDetents([.height(245)])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(32)
             case .addGoal:
                 AddGoalSheet()
                     .presentationDetents([.large])
@@ -133,7 +123,7 @@ struct ContentView: View {
     @ViewBuilder
     private var selectedScreen: some View {
         TabView(selection: $selectedTab) {
-            HomeView(onAddMenu: { sheetRoute = .addMenu }, onAddGoal: { sheetRoute = .addGoal }, onAddCountdown: { sheetRoute = .addCountdown }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onCountdownDetail: { id in sheetRoute = .countdownDetail(id: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
+            HomeView(onAddGoal: { sheetRoute = .addGoal }, onAddCountdown: { sheetRoute = .addCountdown }, onAdjust: { id, direction in sheetRoute = .adjust(goalID: id, direction: direction) }, onDetail: { id in sheetRoute = .detail(goalID: id) }, onCountdownDetail: { id in sheetRoute = .countdownDetail(id: id) }, onGoals: { select(.goals) }, onReports: { select(.reports) })
                 .tabItem { Label(AppTab.home.title, systemImage: AppTab.home.symbol) }
                 .tag(AppTab.home)
             GoalsView(onAdd: { sheetRoute = .addGoal }, onDetail: { id in sheetRoute = .detail(goalID: id) })

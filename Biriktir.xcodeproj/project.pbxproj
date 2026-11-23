@@ -20,6 +20,8 @@
 		A10000000000000000000011 /* BiriktirCat.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000012 /* BiriktirCat.gif */; };
 		A10000000000000000000012 /* AnimatedGIFView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000013 /* AnimatedGIFView.swift */; };
 		A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000014 /* BiriktirCatBreathing.gif */; };
+		A10000000000000000000014 /* BiriktirCatAvatar.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000015 /* BiriktirCatAvatar.gif */; };
+		A10000000000000000000015 /* BiriktirCatStanding.gif in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000016 /* BiriktirCatStanding.gif */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +39,8 @@
 		B20000000000000000000012 /* BiriktirCat.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCat.gif; sourceTree = "<group>"; };
 		B20000000000000000000013 /* AnimatedGIFView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedGIFView.swift; sourceTree = "<group>"; };
 		B20000000000000000000014 /* BiriktirCatBreathing.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatBreathing.gif; sourceTree = "<group>"; };
+		B20000000000000000000015 /* BiriktirCatAvatar.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatAvatar.gif; sourceTree = "<group>"; };
+		B20000000000000000000016 /* BiriktirCatStanding.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = BiriktirCatStanding.gif; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -64,7 +68,7 @@
 		C30000000000000000000004 /* Design */ = {isa = PBXGroup; path = Design; sourceTree = "<group>"; children = (B20000000000000000000003 /* GlassStyle.swift */, B20000000000000000000013 /* AnimatedGIFView.swift */,); };
 		C30000000000000000000005 /* Views */ = {isa = PBXGroup; path = Views; sourceTree = "<group>"; children = (B20000000000000000000004 /* ContentView.swift */, B20000000000000000000005 /* HomeView.swift */, B20000000000000000000006 /* GoalsView.swift */, B20000000000000000000007 /* ReportsView.swift */, B20000000000000000000008 /* SettingsView.swift */, B20000000000000000000009 /* GoalSheets.swift */, B20000000000000000000011 /* OnboardingView.swift */,); };
 		C30000000000000000000006 /* Products */ = {isa = PBXGroup; name = Products; sourceTree = "<group>"; children = (B20000000000000000000010 /* Biriktir.app */,); };
-		C30000000000000000000007 /* Resources */ = {isa = PBXGroup; path = Resources; sourceTree = "<group>"; children = (B20000000000000000000012 /* BiriktirCat.gif */, B20000000000000000000014 /* BiriktirCatBreathing.gif */,); };
+		C30000000000000000000007 /* Resources */ = {isa = PBXGroup; path = Resources; sourceTree = "<group>"; children = (B20000000000000000000012 /* BiriktirCat.gif */, B20000000000000000000014 /* BiriktirCatBreathing.gif */, B20000000000000000000015 /* BiriktirCatAvatar.gif */, B20000000000000000000016 /* BiriktirCatStanding.gif */,); };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -112,7 +116,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */
-		F70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000011 /* BiriktirCat.gif in Resources */, A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		F70000000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A10000000000000000000011 /* BiriktirCat.gif in Resources */, A10000000000000000000013 /* BiriktirCatBreathing.gif in Resources */, A10000000000000000000014 /* BiriktirCatAvatar.gif in Resources */, A10000000000000000000015 /* BiriktirCatStanding.gif in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */

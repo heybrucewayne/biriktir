@@ -49,8 +49,9 @@ struct SavingsEntry: Codable, Identifiable {
     var isDeposit: Bool { amount >= 0 }
 }
 
-struct GoalCompletionEvent: Identifiable, Equatable {
+struct GoalCelebrationEvent: Identifiable, Equatable {
     let id = UUID()
+    let title: String
     let goalName: String
 }
 
@@ -60,7 +61,7 @@ final class SavingsModel {
     private(set) var entries: [SavingsEntry]
     private(set) var countdowns: [CountdownItem]
     private(set) var selectedPrimaryGoalID: UUID?
-    private(set) var completionEvent: GoalCompletionEvent?
+    private(set) var celebrationEvent: GoalCelebrationEvent?
 
     private let goalsKey = "biriktir.goals.v1"
     private let entriesKey = "biriktir.entries.v1"
@@ -111,6 +112,11 @@ final class SavingsModel {
         return goals.first
     }
 
+    var orderedGoals: [SavingsGoal] {
+        guard let primaryGoal else { return goals }
+        return [primaryGoal] + goals.filter { $0.id != primaryGoal.id }
+    }
+
     var totalSaved: Int { goals.reduce(0) { $0 + $1.currentAmount } }
 
     var currentMonthDeposits: Int {
@@ -126,9 +132,9 @@ final class SavingsModel {
         UserDefaults.standard.set(id.uuidString, forKey: primaryGoalKey)
     }
 
-    func dismissCompletionEvent(id: UUID) {
-        guard completionEvent?.id == id else { return }
-        completionEvent = nil
+    func dismissCelebrationEvent(id: UUID) {
+        guard celebrationEvent?.id == id else { return }
+        celebrationEvent = nil
     }
 
     func entries(for goalID: UUID) -> [SavingsEntry] {
@@ -173,8 +179,17 @@ final class SavingsModel {
         let actualChange = nextAmount - goals[index].currentAmount
         guard actualChange != 0 else { return }
         goals[index].currentAmount = nextAmount
-        if previousAmount < goals[index].targetAmount, nextAmount >= goals[index].targetAmount {
-            completionEvent = GoalCompletionEvent(goalName: goals[index].name)
+        let targetAmount = goals[index].targetAmount
+        if targetAmount > 0, previousAmount < targetAmount, nextAmount >= targetAmount {
+            celebrationEvent = GoalCelebrationEvent(title: "Hedef tamamlandı", goalName: goals[index].name)
+        } else if amount > 0, targetAmount > 0 {
+            let previousProgress = Double(previousAmount) / Double(targetAmount)
+            let nextProgress = Double(nextAmount) / Double(targetAmount)
+            if let milestone = [75, 50, 25].first(where: {
+                previousProgress < Double($0) / 100 && nextProgress >= Double($0) / 100
+            }) {
+                celebrationEvent = GoalCelebrationEvent(title: "%\(milestone) tamamlandı", goalName: goals[index].name)
+            }
         }
         entries.append(SavingsEntry(id: UUID(), goalID: goalID, amount: actualChange, date: .now))
         persist()

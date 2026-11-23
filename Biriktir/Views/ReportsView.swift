@@ -14,10 +14,7 @@ struct ReportsView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Raporlar").font(.system(size: 30, weight: .bold, design: .rounded)).tracking(-0.7)
-                    Text("Her adımında birikimin büyüyor.").font(.system(size: 14)).foregroundStyle(AppColors.secondary)
-                }
+                Text("Raporlar").font(.system(size: 30, weight: .bold, design: .rounded)).tracking(-0.7)
 
                 GlassPanel(radius: 28) {
                     VStack(alignment: .leading, spacing: 20) {

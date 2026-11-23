@@ -9,13 +9,9 @@ struct GoalsView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 22) {
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Hedeflerin")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                            .tracking(-0.7)
-                        Text("Hayallerini adım adım biriktir.")
-                            .font(.system(size: 14)).foregroundStyle(AppColors.secondary)
-                    }
+                    Text("Hedeflerin")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .tracking(-0.7)
                     Spacer()
                     Button(action: onAdd) {
                         Image(systemName: "plus")
@@ -32,12 +28,7 @@ struct GoalsView: View {
                 if model.activeGoals.isEmpty {
                     GlassPanel {
                         VStack(spacing: 12) {
-                            AnimatedGIFView(resourceName: "BiriktirCatBreathing")
-                                .frame(width: 132, height: 124)
-                                .accessibilityHidden(true)
                             Text("Henüz bir hedefin yok").font(.system(size: 18, weight: .semibold, design: .rounded))
-                            Text("Kendin için küçük bir hedef belirleyerek başlayabilirsin.")
-                                .font(.system(size: 13)).foregroundStyle(AppColors.secondary).multilineTextAlignment(.center)
                             Button(action: onAdd) { Label("Hedef oluştur", systemImage: "plus") }.buttonStyle(PrimaryButtonStyle())
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 24)
@@ -60,16 +51,6 @@ struct GoalsView: View {
                                 if model.primaryGoal?.id != goal.id {
                                     Button { model.setPrimaryGoal(goal.id) } label: { Label("Ana sayfada göster", systemImage: "star") }
                                 }
-                            }
-                        }
-                    }
-                    GlassPanel(radius: 22) {
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "lightbulb.max.fill").foregroundStyle(AppColors.lavender).font(.system(size: 16))
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("İstikrar kazandırır").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
-                                Text("Düzenli ve küçük katkılar, hedefini daha ulaşılabilir kılar.")
-                                    .font(.system(size: 12)).foregroundStyle(AppColors.secondary).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }

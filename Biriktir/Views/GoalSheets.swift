@@ -1,50 +1,6 @@
 import SwiftUI
 import UIKit
 
-struct AddMenuSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    var onAddGoal: () -> Void
-    var onAddCountdown: () -> Void
-
-    var body: some View {
-        ZStack {
-            AppBackground()
-            VStack(spacing: 12) {
-                sheetHeader(title: "Yeni ekle") { dismiss() }
-                menuAction(title: "Hedef oluştur", symbol: "target", action: onAddGoal)
-                menuAction(title: "Geri sayım ekle", symbol: "calendar", action: onAddCountdown)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 14)
-            .padding(.bottom, 18)
-        }
-        .preferredColorScheme(.dark)
-    }
-
-    private func menuAction(title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            GlassPanel(radius: 18) {
-                HStack(spacing: 12) {
-                    Image(systemName: symbol)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(AppColors.lavender)
-                        .frame(width: 36, height: 36)
-                        .background(AppColors.lavender.opacity(0.12), in: Circle())
-                    Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(AppColors.secondary)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 struct AddGoalSheet: View {
     @Environment(SavingsModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -67,15 +23,9 @@ struct AddGoalSheet: View {
                 sheetHeader(title: "Yeni hedef") { dismiss() }
                     .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 7)
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Aklındaki hayal ne?")
-                                .font(.system(size: 24, weight: .semibold, design: .rounded)).tracking(-0.4)
-                            Text("Hedefini belirle, adımlarını birlikte takip edelim.")
-                                .font(.system(size: 13)).foregroundStyle(AppColors.secondary)
-                        }
+                    VStack(alignment: .leading, spacing: 18) {
                         formSection("Hedef adı") {
-                            TextField("Örn. Yeni evim", text: $name)
+                            TextField("Yeni evim", text: $name)
                                 .textInputAutocapitalization(.words)
                                 .autocorrectionDisabled()
                         }
@@ -96,8 +46,8 @@ struct AddGoalSheet: View {
                             }
                         }
                         HStack(spacing: 10) {
-                            formSection("Hedef tutarı") { moneyField("Örn. 2.000.000", text: $targetInput) }
-                            formSection("Aylık plan") { moneyField("Örn. 25.000", text: $monthlyInput) }
+                            formSection("Hedef tutarı") { moneyField("2.000.000", text: $targetInput) }
+                            formSection("Aylık plan") { moneyField("25.000", text: $monthlyInput) }
                         }
                         formSection("Hedef tarihi") {
                             DatePicker("", selection: $targetDate, in: Date()..., displayedComponents: .date)
@@ -144,7 +94,7 @@ struct AddCountdownSheet: View {
             VStack(alignment: .leading, spacing: 20) {
                 sheetHeader(title: "Geri sayım ekle") { dismiss() }
                 formSection("Geri sayım adı") {
-                    TextField("Örn. Tatile kalan gün", text: $name)
+                    TextField("Tatile kalan gün", text: $name)
                         .textInputAutocapitalization(.sentences)
                         .autocorrectionDisabled(false)
                 }
@@ -194,12 +144,8 @@ struct AdjustmentSheet: View {
             AppBackground()
             VStack(alignment: .leading, spacing: 20) {
                 sheetHeader(title: isDeposit ? "Birikim ekle" : "Birikim çıkar") { dismiss() }
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(goal?.name ?? "Hedef")
-                        .font(.system(size: 23, weight: .semibold, design: .rounded)).tracking(-0.3)
-                    Text(isDeposit ? "Güzel bir adım daha. Ne kadar eklemek istersin?" : "Ne kadarını birikiminden ayırmak istersin?")
-                        .font(.system(size: 13)).foregroundStyle(AppColors.secondary)
-                }
+                Text(goal?.name ?? "Hedef")
+                    .font(.system(size: 23, weight: .semibold, design: .rounded)).tracking(-0.3)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("₺").font(.system(size: 24, weight: .medium, design: .rounded)).foregroundStyle(AppColors.secondary)
                     TextField("0", text: $amountInput)
@@ -387,17 +333,12 @@ struct GoalDetailSheet: View {
                                 .background(.white.opacity(0.08), in: Capsule())
                                 .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 1))
                         }
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Son hareketler").font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(.white)
-                                Spacer()
-                                Text("\(model.entries(for: goal.id).count) kayıt").font(.system(size: 11, weight: .medium)).foregroundStyle(AppColors.secondary)
-                            }
-                            let recentEntries = model.entries(for: goal.id).prefix(8)
-                            if recentEntries.isEmpty {
-                                Text("İlk birikim hareketin burada görünecek.")
-                                    .font(.system(size: 12)).foregroundStyle(AppColors.secondary).padding(.vertical, 12)
-                            } else {
+                        let recentEntries = model.entries(for: goal.id).prefix(8)
+                        if !recentEntries.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Son hareketler")
+                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(.white)
                                 VStack(spacing: 0) {
                                     ForEach(Array(recentEntries)) { entry in
                                         EntryRow(entry: entry)
@@ -407,10 +348,10 @@ struct GoalDetailSheet: View {
                                     }
                                 }
                             }
+                            .padding(18)
+                            .liquidGlass(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(.white.opacity(0.1), lineWidth: 1))
                         }
-                        .padding(18)
-                        .liquidGlass(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(.white.opacity(0.1), lineWidth: 1))
                         Spacer(minLength: 12)
                     }
                     .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 28)

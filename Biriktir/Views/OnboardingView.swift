@@ -6,25 +6,19 @@ struct OnboardingView: View {
 
     private let steps: [OnboardingStep] = [
         OnboardingStep(
-            eyebrow: "İLK ADIM",
-            title: "Hayalin için\nbir hedef belirle.",
-            detail: "Ev, seyahat ya da aklındaki başka bir şey… Birikim hedefin sana özel.",
+            title: "Hedefini\nbelirle.",
             symbol: "scope",
-            feature: "Hedefini ve aylık planını oluştur"
+            feature: "Hedef ve aylık plan"
         ),
         OnboardingStep(
-            eyebrow: "HER ADIMI GÖR",
-            title: "Ne kadar\nyaklaştığını izle.",
-            detail: "Canlı ilerleme halkası ve aylık özet, birikiminin nasıl büyüdüğünü gösterir.",
+            title: "İlerlemeni\nizle.",
             symbol: "chart.bar.xaxis",
-            feature: "İlerlemeni ve raporlarını gör"
+            feature: "İlerleme ve raporlar"
         ),
         OnboardingStep(
-            eyebrow: "KONTROL SENDE",
-            title: "Birikimini\nkolayca takip et.",
-            detail: "Eklediğin veya ayırdığın tutarlar hareket geçmişinde düzenli şekilde saklanır.",
+            title: "Birikimini\ntakip et.",
             symbol: "arrow.up.arrow.down",
-            feature: "Tüm hareketlerin tek yerde"
+            feature: "Birikim hareketleri"
         )
     ]
 
@@ -36,7 +30,10 @@ struct OnboardingView: View {
                     .padding(.bottom, 8)
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: compact ? 12 : 18) {
-                        mascot(height: compact ? 170 : 230)
+                        if currentStep == 0 {
+                            mascot(height: compact ? 170 : 230)
+                                .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                        }
                         stepContent
                             .id(currentStep)
                             .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -110,11 +107,7 @@ struct OnboardingView: View {
 
     private var stepContent: some View {
         let step = steps[currentStep]
-        return VStack(spacing: 12) {
-            Text(step.eyebrow)
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                .tracking(1.6)
-                .foregroundStyle(AppColors.lavender)
+        return VStack(spacing: 16) {
             Text(step.title)
                 .font(.system(size: 29, weight: .semibold, design: .rounded))
                 .tracking(-0.55)
@@ -122,14 +115,6 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(step.detail)
-                .font(.system(size: 14, weight: .regular))
-                .lineSpacing(3)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(AppColors.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 5)
-
             HStack(spacing: 11) {
                 Image(systemName: step.symbol)
                     .font(.system(size: 16, weight: .medium))
@@ -191,9 +176,7 @@ struct OnboardingView: View {
 }
 
 private struct OnboardingStep {
-    let eyebrow: String
     let title: String
-    let detail: String
     let symbol: String
     let feature: String
 }
